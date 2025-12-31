@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 75%);
+    min-height: 100vh;
+}
+
+@layer components {
+    .glass-card {
+        background-color: rgba(30, 41, 59, 0.5);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(51, 65, 85, 0.5);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-radius: 1rem;
+    }
+
+    .input-field {
+        width: 100%;
+        background-color: rgba(15, 23, 42, 0.5);
+        border: 1px solid #334155;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        outline: none;
+        transition: all 0.3s;
+        color: white;
+    }
+
+    .input-field::placeholder {
+        color: #64748b;
+    }
+
+    .input-field:focus {
+        border-color: #14b8a6;
+        box-shadow: 0 0 0 1px #14b8a6;
+    }
+
+    .btn-primary {
+        width: 100%;
+        background: linear-gradient(to right, #14b8a6, #0d9488);
+        color: white;
+        font-weight: 700;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.2);
+        transform: translateY(0);
+        transition: all 0.3s;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(to right, #2dd4bf, #14b8a6);
+        transform: translateY(-2px);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
