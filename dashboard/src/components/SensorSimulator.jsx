@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../config';
 
 const SensorSimulator = ({ selectedSite }) => {
     const [slots, setSlots] = useState([]);
@@ -8,7 +9,7 @@ const SensorSimulator = ({ selectedSite }) => {
     const fetchSlots = async () => {
         if (!selectedSite) return;
         try {
-            const response = await fetch(`http://127.0.0.1:8000/slots?site_id=${selectedSite.id}`);
+            const response = await fetch(`${API_BASE_URL}/slots?site_id=${selectedSite.id}`);
             const data = await response.json();
             setSlots(data);
         } catch (error) {
@@ -29,7 +30,7 @@ const SensorSimulator = ({ selectedSite }) => {
         const newStatus = currentStatus === 'OCCUPIED' ? 'EMPTY' : 'OCCUPIED';
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/simulate-sensor', {
+            const response = await fetch(`${API_BASE_URL}/simulate-sensor`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
