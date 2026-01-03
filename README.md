@@ -1,155 +1,94 @@
-# ParkGuard - Secure Parking Management System
+# ParkGuard - Smart Parking Capacity Enforcement System
+### 🏆 Built for Hack4Delhi Hackathon
 
-A modern, blockchain-integrated parking management system with real-time monitoring, multi-site support, and comprehensive security features.
+> **Problem Statement:** Domain 1: Civic / Governance Tech - Smart Parking Capacity Enforcement for Municipal Corporations
 
-## 🚀 Features
+## 👥 Team Ignis
+*   **Leader:** Mehul
+*   **Members:** Ayush, Harsh, Aavya, Rachit
 
-- **Multi-Site Management**: Manage multiple parking locations from a single dashboard
-- **Blockchain Integration**: Immutable transaction ledger for audit trails
-- **Real-time Monitoring**: Live parking slot status and occupancy tracking
-- **Smart Pathfinding**: A* algorithm for optimal parking slot assignment
-- **Sensor Simulation**: Hardware sensor integration simulation for security alerts
-- **Interactive Map Editor**: Visual parking lot layout designer
-- **Driver Portal**: Easy vehicle entry with secure ticket generation
-- **Auditor View**: Comprehensive transaction history with chain integrity verification
-- **Admin Dashboard**: Real-time analytics and parking lot visualization
+---
+
+## 💡 About The Project
+**ParkGuard** is a comprehensive, real-time "Digital Twin" solution designed for Municipal Corporations (like MCD) to effectively monitor and enforce parking capacity. It addresses the critical issue of overparking, revenue leakage, and contractor accountability through a tamper-proof, blockchain-integrated system.
+
+### Key Features
+*   **🛡️ Blockchain Integrity:** Every parking transaction is hashed and stored in an immutable ledger, preventing data tampering by contractors.
+*   **📡 Real-Time Monitoring:** Live visualization of parking slots (Occupied vs. Empty) to detect capacity breaches instantly.
+*   **🚨 Smart Alerts:** Automatic detection of "Ghost Bookings" (money collected but not recorded) and "Unauthorized Parking" via sensor-to-ledger audit.
+*   **🗺️ Interactive Digital Twin:** Visual map editor to replicate exact on-ground layouts for precise monitoring.
+*   **🤖 A* Pathfinding:** Intelligent algorithm to guide drivers to the nearest available slot, reducing congestion.
+
+---
 
 ## 🏗️ Architecture
 
 ### Frontend (Dashboard)
-- **Framework**: React + Vite
-- **Styling**: Tailwind CSS with custom design system
-- **Features**: 
-  - Admin Dashboard with live metrics
-  - Driver Entry Portal
-  - Auditor View with blockchain verification
-  - Sensor Simulator
-  - Interactive Map Editor
-  - Exit Portal
+- **Framework:** React + Vite
+- **Styling:** Tailwind CSS (Modern, Dark-Themed UI)
+- **Deployed:** [Vercel](https://parkguard-one.vercel.app/)
 
-### Backend (ParkTrust-Backend-main)
-- **Framework**: FastAPI (Python)
-- **Database**: SQLite with SQLAlchemy ORM
-- **Features**:
-  - RESTful API endpoints
-  - Blockchain-style transaction hashing
-  - A* pathfinding for slot assignment
-  - Multi-site support
-  - Real-time sensor status tracking
+### Backend
+- **Framework:** FastAPI (Python)
+- **Database:** SQLite (with Blockchain Hashing)
+- **Algorithm:** Pathfinding & Graph Theory
+- **Deployed:** [Render](https://parkguard-backend.onrender.com/)
 
-## 📋 Prerequisites
+---
 
-- **Node.js** (v16 or higher)
-- **Python** (v3.8 or higher)
-- **npm** or **yarn**
+## 🚀 Live Demo
+**Try the live prototype here:** [https://parkguard-one.vercel.app](https://parkguard-one.vercel.app)
 
-## 🛠️ Installation
+---
+
+## 🛠️ Local Installation
 
 ### Backend Setup
-
-1. Navigate to the backend directory:
-```bash
-cd ParkTrust-Backend-main
-```
-
-2. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Start the backend server:
-```bash
-python -m uvicorn main:app --reload
-```
-
-The API will be available at `http://localhost:8000`
+1.  Navigate to the backend:
+    ```bash
+    cd ParkTrust-Backend-main
+    ```
+2.  Install requirements:
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  Run Server:
+    ```bash
+    python -m uvicorn main:app --reload
+    ```
+    *(Runs on http://localhost:8000)*
 
 ### Frontend Setup
+1.  Navigate to dashboard:
+    ```bash
+    cd dashboard
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Run Frontend:
+    ```bash
+    npm run dev
+    ```
+    *(Runs on http://localhost:5173)*
 
-1. Navigate to the dashboard directory:
-```bash
-cd dashboard
-```
+---
 
-2. Install dependencies:
-```bash
-npm install
-```
+## 🎯 Usage Manual
 
-3. Start the development server:
-```bash
-npm run dev
-```
+1.  **Map Editor:** Draw slots to configure the parking site layout.
+2.  **Driver Portal:** Enter vehicle number to get an assigned slot and generate a secure ticket.
+3.  **Sensor Simulator:** Manually toggle "sensors" to simulate cars parking/leaving.
+    *   *Try entering a car without a ticket to trigger a Security Alert!*
+4.  **Auditor View:** Inspect the immutable ledger to verify revenue and occupancy data.
 
-The dashboard will be available at `http://localhost:5173`
+---
 
-## 🎯 Usage
+## 🔮 Future Roadmap
+*   Integration with IoT LoRaWAN sensors for city-wide deployment.
+*   Municipal Corporation (MCD) specific reporting module.
+*   Public API for navigation apps (Google Maps integration).
 
-### Admin Dashboard
-- View real-time parking occupancy
-- Monitor security alerts
-- Visualize parking lot layout
-- Track revenue and statistics
-
-### Driver Portal
-- Enter license plate number
-- Receive assigned parking slot
-- Get blockchain-verified ticket
-
-### Auditor View
-- Review all parking sessions
-- Verify blockchain integrity
-- Export transaction history
-- Reset system for testing
-
-### Sensor Simulator
-- Toggle parking slot occupancy
-- Simulate hardware sensors
-- Trigger security alerts
-
-### Map Editor
-- Design parking lot layouts
-- Define parking slots visually
-- Configure entry/exit gates
-- Set up pathfinding nodes
-
-## 🔌 API Endpoints
-
-- `GET /sites` - List all parking sites
-- `POST /sites` - Create new site
-- `GET /slots` - Get all parking slots
-- `POST /vehicle-entry` - Register vehicle entry
-- `POST /vehicle-exit` - Process vehicle exit
-- `GET /transactions` - Get transaction ledger
-- `POST /reset` - Reset system (development only)
-
-## 🎨 Tech Stack
-
-**Frontend:**
-- React 18
-- Vite
-- Tailwind CSS
-- Modern ES6+
-
-**Backend:**
-- FastAPI
-- SQLAlchemy
-- Pydantic
-- Uvicorn
-
-## 📝 License
-
-This project is part of a parking management prototype.
-
-## 👥 Contributors
-
-- Mehul Yadav
-
-## 🔮 Future Enhancements
-
-- Mobile app integration
-- Payment gateway integration
-- Advanced analytics dashboard
-- Multi-language support
-- Cloud deployment
-- Real hardware sensor integration
+---
+*Built with ❤️ by Team Ignis for a Smarter Delhi.*
