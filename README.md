@@ -143,13 +143,6 @@ This project is part of a parking management prototype.
 
 ## 👥 Contributors
 
-- Mehul Yadav
+- Mehul 
 
-## 🔮 Future Enhancements
 
-- Mobile app integration
-- Payment gateway integration
-- Advanced analytics dashboard
-- Multi-language support
-- Cloud deployment
-- Real hardware sensor integration
