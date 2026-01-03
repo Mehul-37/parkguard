@@ -7,7 +7,6 @@ Solves revenue leakage and overcrowding in MCD parking lots using "Chain of Cust
 
 ## Key Features
 * **Smart Routing:** Manhattan Distance Algorithm finds the nearest slot to the entry gate.
-* **Dynamic Pricing:** Automatic "Surge Pricing" triggers when occupancy exceeds 80%.
 * **2-Factor Verification:** Cross-references physical IoT sensor data with digital entry logs to detect illegal parking.
 * **Immutable Audit:** Every Entry, Exit, and Payment is hashed (SHA-256 simulation) for anti-tampering.
 
@@ -23,7 +22,7 @@ Solves revenue leakage and overcrowding in MCD parking lots using "Chain of Cust
 3. Open `http://127.0.0.1:8000/docs` to test the API.
 
 ## API Endpoints
-* `POST /vehicle-entry`: Assigns slot & calculates surge price.
+* `POST /vehicle-entry`: Assigns slot.
 * `POST /verify-slot-occupancy`: Validates car presence via simulated sensor.
 * `POST /vehicle-exit`: Calculates final fee & generates receipt.
 * `GET /admin-dashboard`: Real-time revenue analytics.
