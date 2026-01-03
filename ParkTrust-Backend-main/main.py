@@ -183,7 +183,7 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
     raw_data = f"{entry.plate_number}{best_slot.slot_id}{timestamp}{prev_hash}{entry.site_id}"
     tx_hash = generate_hash(raw_data)
     
-    ticket_id = f"TKT-{timestamp}"
+    ticket_id = f"TKT-{timestamp}-{random.randint(1000,9999)}"
     
     new_tx = models.Transaction(
         timestamp=timestamp,

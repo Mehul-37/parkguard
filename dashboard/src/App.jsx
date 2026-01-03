@@ -6,6 +6,8 @@ import SensorSimulator from './components/SensorSimulator';
 import AdminDashboard from './components/AdminDashboard';
 import MapEditor from './components/MapEditor';
 
+import API_BASE_URL from './config';
+
 function App() {
     const [activeTab, setActiveTab] = useState('admin');
     const [selectedSite, setSelectedSite] = useState(null);
@@ -14,7 +16,7 @@ function App() {
     const [editNameValue, setEditNameValue] = useState("");
 
     const refreshSites = () => {
-        fetch('http://localhost:8000/sites')
+        fetch(`${API_BASE_URL}/sites`)
             .then(res => res.json())
             .then(data => {
                 setSites(data);
@@ -41,11 +43,12 @@ function App() {
         }
 
         try {
-            const res = await fetch(`http://localhost:8000/sites/${selectedSite.id}`, {
+            const res = await fetch(`${API_BASE_URL}/sites/${selectedSite.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: editNameValue })
             });
+
             if (res.ok) {
                 refreshSites();
             }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import API_BASE_URL from '../config';
 
 const MapEditor = ({ selectedSite }) => {
     const [mapData, setMapData] = useState({ slots: [], nodes: [], lanes: [] });
@@ -55,7 +56,7 @@ const MapEditor = ({ selectedSite }) => {
                 console.warn("Map Config Load Error/Empty, falling back to backend/defaults:", err);
                 // Fallback fetch slots from backend
                 try {
-                    const res = await fetch(`http://localhost:8000/slots?site_id=${selectedSite.id}`);
+                    const res = await fetch(`${API_BASE_URL}/slots?site_id=${selectedSite.id}`);
                     const data = await res.json();
                     const slots = Array.isArray(data) ? data : [];
                     setMapData({ slots, nodes: [], lanes: [] });
@@ -77,7 +78,7 @@ const MapEditor = ({ selectedSite }) => {
         localStorage.setItem(`parkguard_map_config_${selectedSite.id}`, JSON.stringify(newData));
 
         // Save slots to Backend (only slots, not nodes/lanes for now)
-        fetch(`http://localhost:8000/slots?site_id=${selectedSite.id}`, {
+        fetch(`${API_BASE_URL}/slots?site_id=${selectedSite.id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newData.slots),
@@ -89,7 +90,7 @@ const MapEditor = ({ selectedSite }) => {
         // Save Entry Point if exists
         const entryNode = newData.nodes.find(n => n.is_entry);
         if (entryNode) {
-            fetch(`http://localhost:8000/sites/${selectedSite.id}`, {
+            fetch(`${API_BASE_URL}/sites/${selectedSite.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -108,7 +109,7 @@ const MapEditor = ({ selectedSite }) => {
         const finalUrl = overrideUrl !== null ? overrideUrl : imageUrlInput;
 
         try {
-            const res = await fetch(`http://localhost:8000/sites/${selectedSite.id}`, {
+            const res = await fetch(`${API_BASE_URL}/sites/${selectedSite.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image_url: finalUrl })

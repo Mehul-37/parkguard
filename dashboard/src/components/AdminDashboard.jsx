@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../config';
 
 export default function AdminDashboard({ selectedSite }) {
     const [stats, setStats] = useState({
@@ -16,8 +17,8 @@ export default function AdminDashboard({ selectedSite }) {
         if (!selectedSite) return;
         try {
             const [statsRes, slotsRes] = await Promise.all([
-                fetch(`http://localhost:8000/admin-dashboard?site_id=${selectedSite.id}`),
-                fetch(`http://localhost:8000/slots?site_id=${selectedSite.id}`)
+                fetch(`${API_BASE_URL}/admin-dashboard?site_id=${selectedSite.id}`),
+                fetch(`${API_BASE_URL}/slots?site_id=${selectedSite.id}`)
             ]);
 
             if (statsRes.ok) setStats(await statsRes.json());
@@ -90,7 +91,7 @@ export default function AdminDashboard({ selectedSite }) {
                     </div>
                     <div>
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Revenue</p>
-                        <h3 className="text-4xl font-bold text-white mt-2 font-mono tracking-tight">₹{stats.total_revenue || 0}</h3>
+                        <h3 className="text-4xl font-bold text-white mt-2 font-mono tracking-tight">{stats.total_revenue || 0}</h3>
                         <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                             Live Updates

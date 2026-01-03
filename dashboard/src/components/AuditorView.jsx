@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../config';
 
 export default function AuditorView() {
     const [data, setData] = useState([]);
@@ -9,7 +10,7 @@ export default function AuditorView() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch('http://localhost:8000/transactions');
+            const res = await fetch(`${API_BASE_URL}/transactions`);
             if (!res.ok) throw new Error("Failed to fetch ledger");
             const json = await res.json();
             setData(json);
@@ -37,7 +38,7 @@ export default function AuditorView() {
         if (!confirm("Are you sure you want to reset the entire system? All data will be lost.")) return;
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:8000/reset', { method: 'POST' });
+            const res = await fetch(`${API_BASE_URL}/reset`, { method: 'POST' });
             if (!res.ok) throw new Error("Reset failed");
             await fetchData(); // Refresh data after reset
         } catch (err) {
