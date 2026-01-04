@@ -37,6 +37,7 @@ class Transaction(Base):
     hash = Column(String)
     type = Column(String, default="ENTRY") # ENTRY or EXIT
     fee = Column(String, nullable=True)
+    entry_method = Column(String, default="PLATE") # FASTAG or PLATE
 
 class Alert(Base):
     __tablename__ = "alerts"

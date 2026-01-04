@@ -112,6 +112,7 @@ export default function AdminDashboard({ selectedSite }) {
                                 style={{ width: `${(stats.occupancy_rate || 0).toFixed(1)}%` }}
                             ></div>
                         </div>
+                        <p className="text-xs text-blue-400 mt-2 font-mono">{stats.occupancy || '0/0 slots'}</p>
                     </div>
                 </div>
 

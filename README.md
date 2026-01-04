@@ -41,6 +41,16 @@
 
 ---
 
+## 🎯 Usage Manual
+
+1.  **Map Editor:** Draw slots to configure the parking site layout.
+2.  **Driver Portal:** Enter vehicle number to get an assigned slot and generate a secure ticket.
+3.  **Sensor Simulator:** Manually toggle "sensors" to simulate cars parking/leaving.
+    *   *Try entering a car without a ticket to trigger a Security Alert!*
+4.  **Auditor View:** Inspect the immutable ledger to verify revenue and occupancy data.
+
+---
+
 ## 🛠️ Local Installation
 
 ### Backend Setup
@@ -72,16 +82,6 @@
     npm run dev
     ```
     *(Runs on http://localhost:5173)*
-
----
-
-## 🎯 Usage Manual
-
-1.  **Map Editor:** Draw slots to configure the parking site layout.
-2.  **Driver Portal:** Enter vehicle number to get an assigned slot and generate a secure ticket.
-3.  **Sensor Simulator:** Manually toggle "sensors" to simulate cars parking/leaving.
-    *   *Try entering a car without a ticket to trigger a Security Alert!*
-4.  **Auditor View:** Inspect the immutable ledger to verify revenue and occupancy data.
 
 ---
 

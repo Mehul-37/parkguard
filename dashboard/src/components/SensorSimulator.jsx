@@ -87,18 +87,18 @@ const SensorSimulator = ({ selectedSite }) => {
 
             {/* Active Alerts Banner */}
             {activeAlerts.length > 0 && (
-                <div className="mb-6 space-y-2">
+                <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
                     {activeAlerts.map((alert, idx) => (
-                        <div key={`${alert.id}-${idx}`} className={`p-4 rounded-xl border flex items-center gap-4 ${alert.severity === 'high'
+                        <div key={`${alert.id}-${idx}`} className={`p-4 rounded-xl border flex items-start gap-3 ${alert.severity === 'high'
                             ? 'bg-red-500/10 border-red-500/50 text-red-200'
                             : 'bg-amber-500/10 border-amber-500/50 text-amber-200'
                             }`}>
-                            <div className="p-2 bg-white/10 rounded-lg">
-                                <span className="text-xl">⚠️</span>
+                            <div className="p-1.5 bg-white/10 rounded-lg shrink-0 mt-0.5">
+                                <span className="text-lg">⚠️</span>
                             </div>
-                            <div>
-                                <h3 className="font-bold">{alert.type.replace('_', ' ')}</h3>
-                                <p className="text-sm opacity-90">{alert.message}</p>
+                            <div className="min-w-0">
+                                <h3 className="font-bold text-sm truncate uppercase tracking-wider">{alert.type.replace('_', ' ')}</h3>
+                                <p className="text-xs opacity-80 break-words mt-1 leading-relaxed">{alert.message}</p>
                             </div>
                         </div>
                     ))}
@@ -111,7 +111,7 @@ const SensorSimulator = ({ selectedSite }) => {
                     No slots configured for this site.
                 </div>
             ) : (
-                <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto">
+                <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
                     {slots.map((slot) => {
                         const isSystemOccupied = slot.occupied;
                         const isSensorOccupied = slot.sensor_status === 'OCCUPIED';

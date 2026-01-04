@@ -172,8 +172,13 @@ export default function AuditorView() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 font-medium text-white group-hover:text-accent-400 transition-colors">
-                                            <div>
+                                            <div className="flex items-center gap-2">
                                                 {tx.plate_number}
+                                                {session.entry?.entry_method === 'FASTAG' && (
+                                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-accent-500/20 text-accent-400 border border-accent-500/30">
+                                                        FASTag
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">{tx.ticket_id}</span>

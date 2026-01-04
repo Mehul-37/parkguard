@@ -42,6 +42,14 @@ INITIAL_SLOTS = [
 
 GATES = {"Gate_A": {"x": 0, "y": 0}, "Gate_B": {"x": 20, "y": 0}}
 
+# --- MOCK FASTAG DB ---
+FASTAG_DB = {
+    "TAG-1001": "DL-1CZ-1234",
+    "TAG-1002": "MH-12-AB-9999",
+    "TAG-1003": "KA-05-XY-8888",
+    "TAG-1004": "DL-3C-AB-5555"
+}
+
 @app.on_event("startup")
 def startup_populate_db():
     db = next(get_db())
@@ -78,7 +86,8 @@ class SiteUpdate(BaseModel):
     entry_y: Optional[str] = None
 
 class CarEntry(BaseModel):
-    plate_number: str = "DL-10-AB-1234"
+    plate_number: Optional[str] = None
+    fastag_id: Optional[str] = None
     entry_gate_id: str = "Gate_A"
     site_id: str = "site1"  # Default to site1
 
@@ -163,6 +172,22 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
     if not site_slots:
          raise HTTPException(status_code=409, detail="Parking Full - No slots available")
 
+    # --- HYBRID ENTRY RESOLUTION ---
+    plate_number = entry.plate_number
+    entry_method = "PLATE"
+    
+    if entry.fastag_id:
+        # Lookup Plate
+        if entry.fastag_id in FASTAG_DB:
+            plate_number = FASTAG_DB[entry.fastag_id]
+            entry_method = "FASTAG"
+        else:
+            # Fallback or Error? Let's error if tag is invalid provided
+            raise HTTPException(status_code=400, detail="Invalid FASTag ID")
+    
+    if not plate_number:
+         raise HTTPException(status_code=400, detail="Plate Number or valid FASTag required")
+
     # Simple heuristic
     best_slot = min(site_slots, key=lambda s: calculate_manhattan_distance(
         gate_x, gate_y, s.x, s.y
@@ -180,7 +205,7 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
     prev_hash = last_tx.hash if last_tx else "0"
     
     # Create the raw data string for hashing
-    raw_data = f"{entry.plate_number}{best_slot.slot_id}{timestamp}{prev_hash}{entry.site_id}"
+    raw_data = f"{plate_number}{best_slot.slot_id}{timestamp}{prev_hash}{entry.site_id}{entry_method}"
     tx_hash = generate_hash(raw_data)
     
     ticket_id = f"TKT-{timestamp}-{random.randint(1000,9999)}"
@@ -188,12 +213,13 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
     new_tx = models.Transaction(
         timestamp=timestamp,
         ticket_id=ticket_id,
-        plate_number=entry.plate_number,
+        plate_number=plate_number,
         assigned_slot=best_slot.slot_id,
         site_id=entry.site_id,
         prev_hash=prev_hash,
         hash=tx_hash,
-        type="ENTRY"
+        type="ENTRY",
+        entry_method=entry_method
     )
     
     db.add(new_tx)
@@ -204,9 +230,11 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
         "ticket_id": ticket_id,
         "assigned_slot": best_slot.slot_id,
         "site_id": entry.site_id,
+        "entry_method": entry_method,
+        "plate_number": plate_number, # Return resolved plate
         "directions": f"Go to Grid ({best_slot.x}, {best_slot.y})",
         "blockchain_hash": tx_hash,
-        "message": "Entry logged. Proceed to slot for Sensor Verification."
+        "message": f"{entry_method} Entry logged. Proceed to slot."
     }
 
 @app.post("/verify-slot-occupancy")
@@ -339,11 +367,16 @@ def view_live_stats(site_id: Optional[str] = None, db: Session = Depends(get_db)
     occupied_slots = sum(1 for s in site_slots if s.occupied)
     total_slots = len(site_slots)
     
+    occupancy_rate = 0
+    if total_slots > 0:
+        occupancy_rate = (occupied_slots / total_slots) * 100
+    
     # recent transactions - take last 5
     recent_txs = tx_query.order_by(desc(models.Transaction.id)).limit(5).all()
 
     return {
         "total_revenue": f"₹{total_revenue}", 
+        "occupancy_rate": occupancy_rate,
         "occupancy": f"{occupied_slots}/{total_slots} slots full", 
         "fraud_alerts": alert_query.count(),
         # For alerts and txs, we might need to convert to dicts if they aren't auto-serialized well.

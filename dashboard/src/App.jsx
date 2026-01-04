@@ -177,7 +177,7 @@ function App() {
                                     : 'text-slate-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
-                                Map <span className="bg-white/20 px-1.5 rounded text-[10px] ml-1">NEW</span>
+                                Map
                             </button>
                             <button
                                 onClick={() => setActiveTab('exit')}
@@ -211,7 +211,7 @@ function App() {
                             </div>
                         )}
                         {activeTab === 'sensor-sim' && (
-                            <div className="max-w-4xl mx-auto">
+                            <div className="max-w-7xl mx-auto">
                                 <SensorSimulator {...DataProps} />
                             </div>
                         )}
