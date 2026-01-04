@@ -39,6 +39,11 @@
 ## 🚀 Live Demo
 **Try the live prototype here:** [https://parkguard-one.vercel.app](https://parkguard-one.vercel.app)
 
+> [!WARNING]
+> **Observer Note:** This project is hosted on the **Render Free Tier**.
+> If the API has been inactive for 15+ minutes, the first request may take **30-60 seconds** to wake up the server (Cold Start).
+> *Please be patient on the first load!*
+
 ---
 
 ## 🎯 Usage Manual

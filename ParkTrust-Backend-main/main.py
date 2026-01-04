@@ -31,13 +31,17 @@ INITIAL_SITES = [
 ]
 
 INITIAL_SLOTS = [
-    {"id": "A1", "site_id": "site1", "x": "0", "y": "10", "occupied": False, "sensor_status": "EMPTY"},
-    {"id": "A2", "site_id": "site1", "x": "0", "y": "20", "occupied": False, "sensor_status": "EMPTY"},
-    {"id": "B1", "site_id": "site1", "x": "20", "y": "10", "occupied": False, "sensor_status": "EMPTY"}, 
-    {"id": "B2", "site_id": "site1", "x": "20", "y": "20", "occupied": False, "sensor_status": "EMPTY"},
-    # Site 2 Slots
-    {"id": "X1", "site_id": "site2", "x": "5", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
-    {"id": "X2", "site_id": "site2", "x": "15", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    # Site 1 Slots (X1-X10)
+    {"id": "X1", "site_id": "site1", "x": "5", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    {"id": "X2", "site_id": "site1", "x": "15", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    {"id": "X3", "site_id": "site1", "x": "25", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    {"id": "X4", "site_id": "site1", "x": "35", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    {"id": "X5", "site_id": "site1", "x": "45", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    {"id": "X6", "site_id": "site1", "x": "55", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    {"id": "X7", "site_id": "site1", "x": "65", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    {"id": "X8", "site_id": "site1", "x": "75", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    {"id": "X9", "site_id": "site1", "x": "85", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
+    {"id": "X10", "site_id": "site1", "x": "95", "y": "5", "occupied": False, "sensor_status": "EMPTY"},
 ]
 
 GATES = {"Gate_A": {"x": 0, "y": 0}, "Gate_B": {"x": 20, "y": 0}}
