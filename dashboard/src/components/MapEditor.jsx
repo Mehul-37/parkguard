@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import API_BASE_URL from '../config';
 
 const MapEditor = ({ selectedSite }) => {
-    const [mapData, setMapData] = useState({ slots: [], nodes: [], lanes: [] });
-    const [activeTool, setActiveTool] = useState('rect'); // 'rect', 'wand', 'lane', 'entry'
+    const [mapData, setMapData] = useState({ slots: [] }); // Nodes/Lanes removed
+    const [entryPoint, setEntryPoint] = useState(null);
+    const [activeTool, setActiveTool] = useState('rect'); // 'rect', 'wand', 'entry'
     const [drawing, setDrawing] = useState(false);
     const [startPos, setStartPos] = useState({ x: 0, y: 0 }); // Refs used for drag logic, this is for UI feedback if needed
     const [currentRect, setCurrentRect] = useState(null);
@@ -11,8 +12,9 @@ const MapEditor = ({ selectedSite }) => {
     const [imageUrlInput, setImageUrlInput] = useState("");
     const [isLoading, setIsLoading] = useState(true);
 
-    // Lane Drawing State
-    const [selectedNodeId, setSelectedNodeId] = useState(null); // For connecting lanes
+
+    // Lane Drawing State - REMOVED
+
 
     // Refs
     const startPosRef = useRef({ x: 0, y: 0 });
@@ -43,11 +45,17 @@ const MapEditor = ({ selectedSite }) => {
                     // Validate structure
                     const sanitary = {
                         slots: Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.slots) ? parsed.slots : []),
-                        nodes: Array.isArray(parsed?.nodes) ? parsed.nodes : [],
-                        lanes: Array.isArray(parsed?.lanes) ? parsed.lanes : []
+                        // Nodes/Lanes ignored
                     };
 
                     setMapData(sanitary);
+
+                    // Load Entry Point from Site Data (passed via props theoretically, or we might need to fetch if not in selectedSite)
+                    // Assuming selectedSite has entry_x/y if we loaded it recently. 
+                    // But safe to trust selectedSite prop if it's updated. 
+                    if (selectedSite?.entry_x && selectedSite?.entry_y) {
+                        setEntryPoint({ x: selectedSite.entry_x, y: selectedSite.entry_y });
+                    }
                     setIsLoading(false);
                 } else {
                     throw new Error("No local config found");
@@ -59,10 +67,13 @@ const MapEditor = ({ selectedSite }) => {
                     const res = await fetch(`${API_BASE_URL}/slots?site_id=${selectedSite.id}`);
                     const data = await res.json();
                     const slots = Array.isArray(data) ? data : [];
-                    setMapData({ slots, nodes: [], lanes: [] });
+                    setMapData({ slots });
+                    if (selectedSite?.entry_x && selectedSite?.entry_y) {
+                        setEntryPoint({ x: selectedSite.entry_x, y: selectedSite.entry_y });
+                    }
                 } catch (e) {
                     console.error("Backend fetch error:", e);
-                    setMapData({ slots: [], nodes: [], lanes: [] });
+                    setMapData({ slots: [] });
                 }
                 setIsLoading(false);
             }
@@ -72,12 +83,14 @@ const MapEditor = ({ selectedSite }) => {
         setImageUrlInput(selectedSite?.image_url || "");
     }, [selectedSite]);
 
-    const saveMapData = (newData) => {
+    const saveMapData = (newData, newEntry = null) => {
         setMapData(newData);
         if (!selectedSite) return;
+
+        // Save to local storage (legacy structure support not needed really, but keeping slots)
         localStorage.setItem(`parkguard_map_config_${selectedSite.id}`, JSON.stringify(newData));
 
-        // Save slots to Backend (only slots, not nodes/lanes for now)
+        // Save slots to Backend
         fetch(`${API_BASE_URL}/slots?site_id=${selectedSite.id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -87,15 +100,15 @@ const MapEditor = ({ selectedSite }) => {
             .then(data => console.log("Slots Saved to Backend:", data))
             .catch(err => console.error("Failed to save slots to backend:", err));
 
-        // Save Entry Point if exists
-        const entryNode = newData.nodes.find(n => n.is_entry);
-        if (entryNode) {
+        // Save Entry Point
+        const entryToSave = newEntry || entryPoint;
+        if (entryToSave) {
             fetch(`${API_BASE_URL}/sites/${selectedSite.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    entry_x: entryNode.x,
-                    entry_y: entryNode.y
+                    entry_x: entryToSave.x,
+                    entry_y: entryToSave.y
                 })
             })
                 .then(res => res.json())
@@ -201,57 +214,10 @@ const MapEditor = ({ selectedSite }) => {
         }
     };
 
-    // --- LANE DRAWING LOGIC ---
-    const handleLaneClick = (coords) => {
-        const nodeId = `N-${Date.now().toString().slice(-5)}`;
-        const newNode = { id: nodeId, x: coords.x + '%', y: coords.y + '%' };
+    // --- TOOL LOGIC ---
 
-        let newLanes = [...mapData.lanes];
+    // Lane/Node logic removed.
 
-        // Connect to previous node if selected
-        if (selectedNodeId) {
-            const laneId = `L-${Date.now().toString().slice(-5)}`;
-            newLanes.push({ id: laneId, start: selectedNodeId, end: nodeId });
-        }
-
-        const newNodes = [...mapData.nodes, newNode];
-
-        setMapData({ ...mapData, nodes: newNodes, lanes: newLanes });
-        saveMapData({ ...mapData, nodes: newNodes, lanes: newLanes });
-
-        setSelectedNodeId(nodeId); // Auto-select new node for chaining
-    };
-
-    const handleNodeClick = (id, e) => {
-        e.stopPropagation();
-        if (activeTool === 'lane') {
-            if (selectedNodeId === id) {
-                setSelectedNodeId(null); // Deselect (Stop Path)
-            } else {
-                // Connect if we have a previous selection? Or just start new path?
-                // Let's allow connecting:
-                if (selectedNodeId) {
-                    // Connect previous to this
-                    const laneId = `L-${Date.now().toString().slice(-5)}`;
-                    const newLanes = [...mapData.lanes, { id: laneId, start: selectedNodeId, end: id }];
-                    setMapData({ ...mapData, lanes: newLanes });
-                    saveMapData({ ...mapData, lanes: newLanes });
-                }
-                setSelectedNodeId(id); // Select this one
-            }
-        } else if (activeTool === 'delete') {
-            deleteItem('node', id, e);
-        } else if (activeTool === 'entry') {
-            // Set this node as the ENTRY point
-            // Remove is_entry from all other nodes (Single Entry Policy for now)
-            const newNodes = mapData.nodes.map(n => ({
-                ...n,
-                is_entry: n.id === id ? true : false
-            }));
-            setMapData({ ...mapData, nodes: newNodes });
-            saveMapData({ ...mapData, nodes: newNodes });
-        }
-    };
 
 
     // --- MOUSE HANDLERS ---
@@ -266,8 +232,10 @@ const MapEditor = ({ selectedSite }) => {
             return;
         }
 
-        if (activeTool === 'lane') {
-            handleLaneClick(coords);
+        if (activeTool === 'entry') {
+            const entryCoords = { x: coords.x + '%', y: coords.y + '%' };
+            setEntryPoint(entryCoords);
+            saveMapData(mapData, entryCoords); // Trigger save with new entry
             return;
         }
 
@@ -338,14 +306,6 @@ const MapEditor = ({ selectedSite }) => {
         if (type === 'slot') {
             const newSlots = mapData.slots.filter(s => s.id !== id);
             saveMapData({ ...mapData, slots: newSlots });
-        }
-        // Could implement node/lane deletion similarly
-        if (type === 'node') {
-            // Delete node AND connected lanes
-            const newNodes = mapData.nodes.filter(n => n.id !== id);
-            const newLanes = mapData.lanes.filter(l => l.start !== id && l.end !== id);
-            setMapData({ ...mapData, nodes: newNodes, lanes: newLanes });
-            saveMapData({ ...mapData, nodes: newNodes, lanes: newLanes });
         }
     };
 
@@ -472,29 +432,19 @@ const MapEditor = ({ selectedSite }) => {
                     {/* RENDER LANES AND NODES */}
                     <svg className="absolute inset-0 w-full h-full z-10" style={{ pointerEvents: 'none' }}>
 
-                        {mapData.nodes?.map(node => (
-                            <g
-                                key={node.id}
-                                onClick={(e) => handleNodeClick(node.id, e)}
-                                className="cursor-pointer transition-all group/node"
-                                style={{ pointerEvents: 'all' }}
-                            >
-                                {/* Glow for Entry Node */}
-                                {node.is_entry && (
-                                    <circle cx={node.x} cy={node.y} r="15" fill="none" stroke="#10b981" strokeWidth="2" className="animate-ping opacity-75" />
-                                )}
+                        {/* ENTRY POINT MARKER */}
+                        {entryPoint && (
+                            <g>
+                                <circle cx={entryPoint.x} cy={entryPoint.y} r="15" fill="none" stroke="#10b981" strokeWidth="2" className="animate-ping opacity-75" />
                                 <circle
-                                    cx={node.x} cy={node.y}
-                                    r={node.is_entry ? "8" : "4"}
-                                    fill={node.is_entry ? "#10b981" : (node.id === selectedNodeId ? "#fbbf24" : (activeTool === 'delete' ? '#ef4444' : "#3b82f6"))} // Green for entry
+                                    cx={entryPoint.x} cy={entryPoint.y}
+                                    r="8"
+                                    fill="#10b981"
                                     stroke="white" strokeWidth="2"
-                                    className="hover:r-6 transition-all"
                                 />
-                                {node.is_entry && (
-                                    <text x={node.x} y={node.y} dy="-12" textAnchor="middle" fill="#10b981" fontSize="10" fontWeight="bold" className="pointer-events-none drop-shadow-md">START</text>
-                                )}
+                                <text x={entryPoint.x} y={entryPoint.y} dy="-12" textAnchor="middle" fill="#10b981" fontSize="10" fontWeight="bold" className="pointer-events-none drop-shadow-md">START</text>
                             </g>
-                        ))}
+                        )}
                     </svg>
 
                     {/* SLOTS OVERLAY */}
@@ -541,9 +491,7 @@ const MapEditor = ({ selectedSite }) => {
                 <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none z-40">
                     <div className="text-xs text-white font-mono bg-slate-900/90 inline-flex items-center gap-3 px-4 py-2 rounded-full border border-slate-700 shadow-xl">
                         {activeTool === 'rect' && <span>Drag to create Slot</span>}
-                        {activeTool === 'wand' && <span>Click inside a parking box to Auto-Detect</span>}
-                        {activeTool === 'lane' && <span>Click to place Path Nodes. Click <b>Stop Path</b> to end chain.</span>}
-                        {activeTool === 'entry' && <span className="text-emerald-400">Click a Node to mark it as the <b>ENTRY POINT</b></span>}
+                        {activeTool === 'entry' && <span className="text-emerald-400">Tap anywhere to set <b>ENTRY POINT</b></span>}
                         {activeTool === 'delete' && <span className="text-red-400">Click items (Slots or Nodes) to Delete</span>}
                     </div>
                 </div>
