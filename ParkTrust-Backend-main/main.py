@@ -66,20 +66,21 @@ def startup_populate_db():
             db.commit()
             print("Initialized Sites")
 
-        # 2. Populate Slots
-        if db.query(models.Slot).count() == 0:
-            for slot_data in INITIAL_SLOTS:
-                slot = models.Slot(
-                    slot_id=slot_data["id"],
-                    site_id=slot_data["site_id"],
-                    x=slot_data["x"],
-                    y=slot_data["y"],
-                    occupied=slot_data["occupied"],
-                    sensor_status=slot_data["sensor_status"]
-                )
-                db.add(slot)
-            db.commit()
-            print("Initialized Slots")
+        # 2. Populate Slots - DISABLED to prevent conflicts with Map Editor
+        # The Map Editor is now the source of truth for slot configuration
+        # if db.query(models.Slot).count() == 0:
+        #     for slot_data in INITIAL_SLOTS:
+        #         slot = models.Slot(
+        #             slot_id=slot_data["id"],
+        #             site_id=slot_data["site_id"],
+        #             x=slot_data["x"],
+        #             y=slot_data["y"],
+        #             occupied=slot_data["occupied"],
+        #             sensor_status=slot_data["sensor_status"]
+        #         )
+        #         db.add(slot)
+        #     db.commit()
+        #     print("Initialized Slots")
     finally:
         db.close()
 
