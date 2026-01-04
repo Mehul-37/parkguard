@@ -79,10 +79,39 @@ export default function AdminDashboard({ selectedSite }) {
     const col1 = displaySlots.slice(0, mid);
     const col2 = displaySlots.slice(mid);
 
+    const handleVerifyChain = async () => {
+        const btn = document.getElementById('verify-btn');
+        if (btn) btn.innerText = "Verifying...";
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/verify-chain`);
+            const data = await res.json();
+            alert(`BLOCKCHAIN AUDIT RESULT:\n\nStatus: ${data.status}\nMessage: ${data.message}`);
+        } catch (e) {
+            alert("Verification Error: Could not connect to auditor node.");
+        } finally {
+            if (btn) btn.innerHTML = `
+                <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Verify Chain Integrity
+            `;
+        }
+    };
+
     if (!selectedSite) return <div>Please select a site.</div>;
 
     return (
         <div className="h-full flex flex-col gap-6 animate-fade-in pb-8">
+            <div className="flex justify-end">
+                <button
+                    id="verify-btn"
+                    onClick={handleVerifyChain}
+                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg active:scale-95"
+                >
+                    <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Verify Chain Integrity
+                </button>
+            </div>
+
             {/* Top Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="glass-card p-6 flex items-center justify-between relative overflow-hidden group">

@@ -388,16 +388,9 @@ const MapEditor = ({ selectedSite }) => {
                         title="Auto-Detect Slot"
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        Magic Wand
+                        Auto-Detect
                     </button>
-                    <button
-                        onClick={() => setActiveTool('lane')}
-                        className={`toolbar-btn px-4 py-2 rounded text-xs font-bold flex items-center gap-2 transition-all ${activeTool === 'lane' ? 'bg-blue-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
-                        title="Draw Driveable Path"
-                    >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-                        Draw Lanes
-                    </button>
+
                     <button
                         onClick={() => setActiveTool('entry')}
                         className={`toolbar-btn px-4 py-2 rounded text-xs font-bold flex items-center gap-2 transition-all ${activeTool === 'entry' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
@@ -406,25 +399,11 @@ const MapEditor = ({ selectedSite }) => {
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                         Set Entry
                     </button>
-                    <button
-                        onClick={() => setActiveTool('delete')}
-                        className={`toolbar-btn px-4 py-2 rounded text-xs font-bold flex items-center gap-2 transition-all ${activeTool === 'delete' ? 'bg-red-500 text-white shadow-lg' : 'text-slate-400 hover:text-red-400 hover:bg-slate-700'}`}
-                        title="Delete Item"
-                    >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        Delete
-                    </button>
+
 
                     <div className="w-px bg-slate-700 h-6 mx-2"></div>
 
-                    <button
-                        onClick={() => setSelectedNodeId(null)}
-                        className={`toolbar-btn px-3 py-2 rounded text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-700 ${selectedNodeId ? 'animate-pulse text-amber-400' : 'opacity-50 cursor-not-allowed'}`}
-                        disabled={!selectedNodeId}
-                        title="Deselect Node / Stop Path"
-                    >
-                        Stop Path
-                    </button>
+
                     <button
                         onClick={handleManualSave}
                         className="toolbar-btn px-3 py-2 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow ml-2 transition-all active:scale-95"
@@ -492,33 +471,7 @@ const MapEditor = ({ selectedSite }) => {
 
                     {/* RENDER LANES AND NODES */}
                     <svg className="absolute inset-0 w-full h-full z-10" style={{ pointerEvents: 'none' }}>
-                        {mapData.lanes?.map(lane => {
-                            const start = mapData.nodes?.find(n => n.id === lane.start);
-                            const end = mapData.nodes?.find(n => n.id === lane.end);
-                            if (!start || !end) return null;
-                            return (
-                                <line
-                                    key={lane.id}
-                                    x1={start.x} y1={start.y}
-                                    x2={end.x} y2={end.y}
-                                    stroke={activeTool === 'delete' ? '#ef4444' : '#3b82f6'}
-                                    strokeWidth="8"
-                                    opacity="0.8"
-                                    strokeDasharray="5,5"
-                                    style={{ pointerEvents: activeTool === 'delete' ? 'stroke' : 'none', cursor: activeTool === 'delete' ? 'pointer' : 'default' }}
-                                    onClick={(e) => {
-                                        if (activeTool === 'delete') {
-                                            e.stopPropagation();
-                                            if (window.confirm("Delete this lane?")) {
-                                                const newLanes = mapData.lanes.filter(l => l.id !== lane.id);
-                                                setMapData({ ...mapData, lanes: newLanes });
-                                                saveMapData({ ...mapData, lanes: newLanes });
-                                            }
-                                        }
-                                    }}
-                                />
-                            );
-                        })}
+
                         {mapData.nodes?.map(node => (
                             <g
                                 key={node.id}
