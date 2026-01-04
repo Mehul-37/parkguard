@@ -44,6 +44,9 @@
 > If the API has been inactive for 15+ minutes, the first request may take **30-60 seconds** to wake up the server (Cold Start).
 > *Please be patient on the first load!*
 
+## 🎥 Demo Video
+**Watch the Project Walkthrough:** [Google Drive Link](https://drive.google.com/file/d/17SFXwscScg0ZacvhTzYRI_t0HFBE6YZp/view?usp=drive_link)
+
 ---
 
 ## 🎯 Usage Manual
