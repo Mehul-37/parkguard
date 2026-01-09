@@ -4,6 +4,7 @@ import AuditorView from './components/AuditorView';
 import ExitPortal from './components/ExitPortal';
 import SensorSimulator from './components/SensorSimulator';
 import AdminDashboard from './components/AdminDashboard';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 import MapEditor from './components/MapEditor';
 
 import API_BASE_URL from './config';
@@ -180,6 +181,15 @@ function App() {
                                 Map
                             </button>
                             <button
+                                onClick={() => setActiveTab('analytics')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'analytics'
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 scale-100'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                Reports
+                            </button>
+                            <button
                                 onClick={() => setActiveTab('exit')}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'exit'
                                     ? 'bg-red-600 text-white shadow-lg shadow-red-600/25 scale-100'
@@ -223,6 +233,11 @@ function App() {
                         {activeTab === 'exit' && (
                             <div className="max-w-2xl mx-auto">
                                 <ExitPortal {...DataProps} />
+                            </div>
+                        )}
+                        {activeTab === 'analytics' && (
+                            <div className="max-w-7xl mx-auto">
+                                <AnalyticsDashboard {...DataProps} />
                             </div>
                         )}
                         {activeTab === 'admin' && (

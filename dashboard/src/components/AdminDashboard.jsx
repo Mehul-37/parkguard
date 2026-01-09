@@ -7,7 +7,8 @@ export default function AdminDashboard({ selectedSite }) {
         occupancy_rate: 0,
         active_cars: 0,
         alerts_count: 0,
-        recent_alerts: []
+        recent_alerts: [],
+        recent_transactions: []
     });
     const [slots, setSlots] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -53,10 +54,35 @@ export default function AdminDashboard({ selectedSite }) {
     };
 
     // Calculate Active Alerts from Live Data
-    const activeAnomalies = slots.filter(s =>
-        (s.occupied && s.sensor_status === 'EMPTY') ||
-        (!s.occupied && s.sensor_status === 'OCCUPIED')
-    ).length;
+    const liveAlerts = slots.map(s => {
+        if (s.occupied && s.sensor_status === 'EMPTY') {
+            return {
+                type: 'GHOST_BOOKING',
+                message: `Live Mismatch: Vehicle missing from paid slot ${s.id}`,
+                severity: 'MEDIUM',
+                timestamp: Date.now() / 1000,
+                site_id: s.site_id,
+                isLive: true
+            };
+        }
+        if (!s.occupied && s.sensor_status === 'OCCUPIED') {
+            return {
+                type: 'UNAUTHORIZED_PARKING',
+                message: `Live Mismatch: Unidentified vehicle in slot ${s.id}`,
+                severity: 'HIGH',
+                timestamp: Date.now() / 1000,
+                site_id: s.site_id,
+                isLive: true
+            };
+        }
+        return null;
+    }).filter(Boolean);
+
+    const activeAnomalies = liveAlerts.length;
+
+    // Combine db alerts and live alerts for display
+    // We prioritize live alerts at the top, then historical
+    const displayAlerts = [...liveAlerts, ...stats.recent_alerts].slice(0, 10);
 
     // Generate Mock Slots for Realistic Layout
     const getDisplaySlots = () => {
@@ -79,16 +105,30 @@ export default function AdminDashboard({ selectedSite }) {
     const col1 = displaySlots.slice(0, mid);
     const col2 = displaySlots.slice(mid);
 
+    const [verificationResult, setVerificationResult] = useState(null);
+
     const handleVerifyChain = async () => {
         const btn = document.getElementById('verify-btn');
         if (btn) btn.innerText = "Verifying...";
 
+        // Add fake delay for effect if too fast
+        const startTime = Date.now();
+
         try {
             const res = await fetch(`${API_BASE_URL}/verify-chain`);
             const data = await res.json();
-            alert(`BLOCKCHAIN AUDIT RESULT:\n\nStatus: ${data.status}\nMessage: ${data.message}`);
+
+            // Ensure at least 1s animation
+            const elapsed = Date.now() - startTime;
+            if (elapsed < 1000) await new Promise(r => setTimeout(r, 1000 - elapsed));
+
+            setVerificationResult(data);
         } catch (e) {
-            alert("Verification Error: Could not connect to auditor node.");
+            console.error(e);
+            setVerificationResult({
+                status: "ERROR",
+                message: "Could not connect to Auditor Node for verification."
+            });
         } finally {
             if (btn) btn.innerHTML = `
                 <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -97,37 +137,85 @@ export default function AdminDashboard({ selectedSite }) {
         }
     };
 
+    const getAlertStyle = (type, severity) => {
+        if (type === 'GHOST_BOOKING' || severity === 'MEDIUM') {
+            return {
+                card: 'bg-slate-800/80 border-l-2 border-amber-500',
+                text: 'text-amber-400',
+                badge: 'bg-amber-500/20 text-amber-400'
+            };
+        }
+        return {
+            card: 'bg-slate-800/80 border-l-2 border-red-500',
+            text: 'text-red-400',
+            badge: 'bg-red-500/20 text-red-400'
+        };
+    };
+
     if (!selectedSite) return <div>Please select a site.</div>;
 
     return (
-        <div className="h-full flex flex-col gap-6 animate-fade-in pb-8">
-            <div className="flex justify-end">
-                <button
-                    id="verify-btn"
-                    onClick={handleVerifyChain}
-                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg active:scale-95"
-                >
-                    <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Verify Chain Integrity
-                </button>
-            </div>
+        <div className="h-full flex flex-col gap-6 animate-fade-in pb-8 relative">
+            {verificationResult && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="glass-card max-w-md w-full p-6 relative shadow-2xl border border-white/10 flex flex-col items-center text-center animate-scale-in">
+                        <button
+                            onClick={() => setVerificationResult(null)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-white"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${verificationResult.status === 'VERIFIED' ? 'bg-emerald-500/20 text-emerald-400 ring-4 ring-emerald-500/10' :
+                            verificationResult.status === 'COMPROMISED' ? 'bg-red-500/20 text-red-500 ring-4 ring-red-500/10' :
+                                'bg-amber-500/20 text-amber-500'
+                            }`}>
+                            {verificationResult.status === 'VERIFIED' ? (
+                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            ) : verificationResult.status === 'COMPROMISED' ? (
+                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            ) : (
+                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            )}
+                        </div>
+
+                        <h3 className="text-xl font-bold text-white mb-2">
+                            {verificationResult.status === 'VERIFIED' ? 'Audit Passed' :
+                                verificationResult.status === 'COMPROMISED' ? 'Integrity Failed' :
+                                    'Verification Notice'}
+                        </h3>
+
+                        <p className="text-slate-300 text-sm mb-6 leading-relaxed">
+                            {verificationResult.message}
+                        </p>
+
+                        {verificationResult.details && verificationResult.details.length > 0 && (
+                            <div className="w-full bg-slate-900/50 rounded-lg p-3 mb-6 max-h-40 overflow-auto border border-red-500/10 text-left">
+                                <p className="text-[10px] font-bold text-red-400 uppercase mb-2">Failed Blocks (First 5):</p>
+                                {verificationResult.details.slice(0, 5).map((err, i) => (
+                                    <div key={i} className="text-xs text-red-300 font-mono mb-1 pb-1 border-b border-white/5 last:border-0">
+                                        Row {err.ticket_id}: {err.error}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => setVerificationResult(null)}
+                            className="bg-white text-slate-900 hover:bg-slate-200 px-6 py-2 rounded-lg font-bold text-sm transition-colors w-full"
+                        >
+                            Close Report
+                        </button>
+                    </div>
+                </div>
+            )}
+
+
 
             {/* Top Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="glass-card p-6 flex items-center justify-between relative overflow-hidden group">
-                    <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <svg className="w-32 h-32 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg>
-                    </div>
-                    <div>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Revenue</p>
-                        <h3 className="text-4xl font-bold text-white mt-2 font-mono tracking-tight">{stats.total_revenue || 0}</h3>
-                        <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            Live Updates
-                        </p>
-                    </div>
-                </div>
 
+                {/* 1. OCCUPANCY (Left) */}
                 <div className="glass-card p-6 flex items-center justify-between relative overflow-hidden group">
                     <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                         <svg className="w-32 h-32 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
@@ -145,6 +233,7 @@ export default function AdminDashboard({ selectedSite }) {
                     </div>
                 </div>
 
+                {/* 2. ACTIVE ALERTS (Center) */}
                 <div className={`glass-card p-6 flex items-center justify-between relative overflow-hidden group transition-all duration-300 ${activeAnomalies > 0 ? 'bg-red-500/10 border-red-500/50' : ''}`}>
                     <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                         <svg className={`w-32 h-32 ${activeAnomalies > 0 ? 'text-red-400' : 'text-emerald-400'}`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
@@ -155,6 +244,32 @@ export default function AdminDashboard({ selectedSite }) {
                             {activeAnomalies}
                         </h3>
                         <p className="text-xs text-slate-500 mt-2">{activeAnomalies > 0 ? 'Immediate Attention Required' : 'All Zones Secure'}</p>
+                    </div>
+                </div>
+
+                {/* 3. VERIFY + REVENUE (Right) */}
+                <div className="flex flex-col gap-4 h-full">
+                    <button
+                        id="verify-btn"
+                        onClick={handleVerifyChain}
+                        className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white px-4 py-3 rounded-lg text-sm font-bold transition-all shadow-lg active:scale-95 flex-1"
+                    >
+                        <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Verify Chain Integrity
+                    </button>
+
+                    <div className="glass-card p-6 flex items-center justify-between relative overflow-hidden group flex-[2]">
+                        <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <svg className="w-32 h-32 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg>
+                        </div>
+                        <div>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Revenue</p>
+                            <h3 className="text-4xl font-bold text-white mt-2 font-mono tracking-tight">{stats.total_revenue || 0}</h3>
+                            <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Live Updates
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -188,41 +303,22 @@ export default function AdminDashboard({ selectedSite }) {
                             {/* Slots Overlay */}
                             <div className="absolute inset-0 w-full h-full">
                                 {displaySlots.map((slot) => {
-                                    // Default sizes if not set (fallback to roughly grid size if missing)
-                                    const width = slot.width || '80px';
-                                    const height = slot.height || '45px';
-                                    const isVertical = parseFloat(height) > parseFloat(width); // Simple heuristic or explicit rotation prop
-
                                     return (
                                         <div
                                             key={slot.id}
-                                            className={`absolute border-2 transition-all duration-500 shadow-xl rounded flex items-center justify-center
+                                            className={`absolute border-2 transition-all duration-500 shadow-xl rounded flex items-center justify-center font-bold text-white text-xs
                                             ${getSlotColor(slot)}
                                             ${slot.occupied ? 'z-10' : 'z-0'}
                                         `}
                                             style={{
-                                                left: slot.x || '50%',
-                                                top: slot.y || '50%',
-                                                width: slot.width || '5%',
-                                                height: slot.height || '8%',
-                                                transform: 'translate(-50%, -50%)',
+                                                left: slot.x,
+                                                top: slot.y,
+                                                width: slot.width,
+                                                height: slot.height
                                             }}
                                             title={`Slot ${slot.id}`}
                                         >
-                                            <div className="absolute -top-4 text-[10px] font-bold text-white bg-black/50 px-1 rounded backdrop-blur-sm border border-white/10">
-                                                {slot.id}
-                                            </div>
-
-                                            {/* Car Visual */}
-                                            {slot.occupied && (
-                                                <div className="w-[80%] h-[60%] bg-white rounded shadow-sm relative">
-                                                    <div className="absolute inset-x-1 top-1 h-[30%] bg-slate-800/20 rounded-sm"></div>
-                                                </div>
-                                            )}
-
-                                            {!slot.occupied && (
-                                                <span className="text-[10px] font-bold opacity-30 text-white">P</span>
-                                            )}
+                                            <span className="drop-shadow-md">{slot.id}</span>
                                         </div>
                                     );
                                 })}
@@ -240,61 +336,73 @@ export default function AdminDashboard({ selectedSite }) {
                         </h3>
                     </div>
                     <div className="flex-1 overflow-auto p-4 custom-scrollbar space-y-2 bg-slate-900/40">
-                        {stats.recent_alerts.length === 0 ? (
+                        {displayAlerts.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-slate-500">
                                 <svg className="w-12 h-12 opacity-20 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <p className="text-xs">No historical anomalies.</p>
                             </div>
                         ) : (
-                            stats.recent_alerts.map((alert, i) => (
-                                <div key={i} className="p-3 rounded bg-slate-800/80 border-l-2 border-red-500 text-sm animate-slide-in-right">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <span className="font-bold text-red-400 text-[10px] uppercase">{alert.type}</span>
-                                        <span className="text-slate-600 text-[10px] font-mono">{new Date(alert.timestamp * 1000).toLocaleTimeString()}</span>
+                            displayAlerts.map((alert, i) => {
+                                const styles = getAlertStyle(alert.type, alert.severity);
+                                return (
+                                    <div key={i} className={`p-3 rounded text-sm animate-slide-in-right ${styles.card}`}>
+                                        <div className="flex justify-between items-start mb-1">
+                                            <span className={`font-bold text-[10px] uppercase ${styles.text}`}>{alert.type}</span>
+                                            <span className="text-slate-600 text-[10px] font-mono">{new Date(alert.timestamp * 1000).toLocaleTimeString()}</span>
+                                        </div>
+                                        <p className="text-slate-300 text-xs leading-relaxed">{alert.message}</p>
                                     </div>
-                                    <p className="text-slate-300 text-xs leading-relaxed">{alert.message}</p>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* Recent Alerts List */}
-            <div className="glass-card p-6 flex flex-col flex-1 min-h-[200px]">
+            {/* Recent Parking Ledger */}
+            <div className="glass-card p-6 flex flex-col flex-1 min-h-[260px]">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <span className="w-2 h-6 bg-red-500 rounded-full"></span>
-                    Recent Security Alerts
+                    <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
+                    Recent Parking Ledger
                 </h3>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-slate-400">
                         <thead className="text-xs uppercase bg-slate-900/50 text-slate-500 font-semibold">
                             <tr>
                                 <th className="px-4 py-3 rounded-l-lg">Time</th>
-                                <th className="px-4 py-3">Message</th>
+                                <th className="px-4 py-3">Ticket ID</th>
+                                <th className="px-4 py-3">Plate/Tag</th>
                                 <th className="px-4 py-3">Type</th>
-                                <th className="px-4 py-3">Severity</th>
-                                <th className="px-4 py-3 rounded-r-lg text-right">Status</th>
+                                <th className="px-4 py-3 rounded-r-lg text-right">Fee / Status</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {(stats.recent_alerts || []).slice(0, 5).map((alert, i) => (
+                            {(stats.recent_transactions || []).map((tx, i) => (
                                 <tr key={i} className="hover:bg-white/5 transition-colors">
-                                    <td className="px-4 py-3 font-mono text-xs">{new Date((alert.timestamp || Date.now() / 1000) * 1000).toLocaleTimeString()}</td>
-                                    <td className="px-4 py-3 font-mono text-xs text-blue-400 truncate max-w-[100px]" title={alert.message}>{(alert.message || '').substring(0, 30)}...</td>
-                                    <td className="px-4 py-3 text-slate-200">{alert.type || 'ALERT'}</td>
+                                    <td className="px-4 py-3 font-mono text-xs">{new Date(tx.timestamp * 1000).toLocaleTimeString()}</td>
+                                    <td className="px-4 py-3 font-mono text-xs text-slate-300">{tx.ticket_id}</td>
+                                    <td className="px-4 py-3 text-white font-bold">{tx.plate_number}</td>
                                     <td className="px-4 py-3">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${alert.severity === 'HIGH' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                                            {alert.severity || 'MEDIUM'}
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${tx.type === 'ENTRY'
+                                                ? 'bg-emerald-500/20 text-emerald-400'
+                                                : 'bg-blue-500/20 text-blue-400'
+                                            }`}>
+                                            {tx.type}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-right font-mono text-emerald-400">-</td>
+                                    <td className="px-4 py-3 text-right font-mono">
+                                        {tx.type === 'EXIT' ? (
+                                            <span className="text-emerald-400">{tx.fee}</span>
+                                        ) : (
+                                            <span className="text-slate-500 text-xs uppercase tracking-wider">Active</span>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
-                            {(!stats.recent_alerts || stats.recent_alerts.length === 0) && (
+                            {(!stats.recent_transactions || stats.recent_transactions.length === 0) && (
                                 <tr>
                                     <td colSpan="5" className="px-4 py-8 text-center text-slate-500 text-sm">
-                                        No recent alerts
+                                        No recent transactions
                                     </td>
                                 </tr>
                             )}

@@ -506,6 +506,79 @@ def simulate_sensor(toggle: SensorToggle, db: Session = Depends(get_db)):
         "message": "Sensor state updated"
     }
 
+@app.get("/verify-chain")
+def verify_blockchain(db: Session = Depends(get_db)):
+    """
+    Iterates through the entire transaction ledger to verify:
+    1. Hash Integrity: Re-hashing the data matches the stored hash.
+    2. Link Integrity: Each block's prev_hash matches the previous block's hash.
+    """
+    transactions = db.query(models.Transaction).order_by(models.Transaction.id).all()
+    
+    if not transactions:
+        return {"status": "AWAITING_DATA", "message": "Ledger is empty. No blocks to verify."}
+
+    broken_blocks = []
+    
+    for i, tx in enumerate(transactions):
+        # 1. Verify Hash
+        # Reconstruct raw data string. IMPORTANT: Must match generation logic EXACTLY.
+        # Entry: f"{plate_number}{best_slot.slot_id}{timestamp}{prev_hash}{entry.site_id}{entry_method}"
+        # Exit:  f"{exit_req.ticket_id}_EXIT_{current_time}{prev_hash}"
+        # Wait, the generation logic differs by type!
+        
+        recalculated_hash = ""
+        
+        if tx.type == "ENTRY":
+            # We need to reconstruct the EXACT string used in creation.
+            # In `vehicle_enters`: f"{plate_number}{best_slot.slot_id}{timestamp}{prev_hash}{entry.site_id}{entry_method}"
+            # Problem: We stored `assigned_slot` (A1) but logic used `best_slot.slot_id`. Matches.
+            # logic used `entry.site_id`. Matches `tx.site_id`.
+            # logic used `entry_method`. Matches `tx.entry_method`.
+            
+            raw_data = f"{tx.plate_number}{tx.assigned_slot}{tx.timestamp}{tx.prev_hash}{tx.site_id}{tx.entry_method}"
+            recalculated_hash = generate_hash(raw_data)
+            
+        elif tx.type == "EXIT":
+             # In `vehicle_exits`: f"{exit_req.ticket_id}_EXIT_{current_time}{prev_hash}"
+             # tx.ticket_id matches exit_req.ticket_id
+             # tx.timestamp matches current_time
+             raw_data = f"{tx.ticket_id}_EXIT_{tx.timestamp}{tx.prev_hash}"
+             recalculated_hash = generate_hash(raw_data)
+        
+        # Check 1: Hash Mismatch
+        if recalculated_hash != tx.hash:
+            broken_blocks.append({
+                "ticket_id": tx.ticket_id,
+                "error": "HASH_MISMATCH",
+                "expected": recalculated_hash,
+                "found": tx.hash
+            })
+            continue
+
+        # Check 2: Link Broken
+        if i > 0:
+            prev_tx = transactions[i-1]
+            if tx.prev_hash != prev_tx.hash:
+                broken_blocks.append({
+                    "ticket_id": tx.ticket_id,
+                    "error": "BROKEN_LINK",
+                    "expected_prev": prev_tx.hash,
+                    "found_prev": tx.prev_hash
+                })
+
+    if broken_blocks:
+        return {
+            "status": "COMPROMISED", 
+            "message": f"Blockchain integrity failure detected in {len(broken_blocks)} blocks.",
+            "details": broken_blocks
+        }
+    
+    return {
+        "status": "VERIFIED", 
+        "message": f"All {len(transactions)} blocks validated. Ledger is immutable and secure."
+    }
+
 @app.post("/reset")
 def reset_system(db: Session = Depends(get_db)):
     """Resets the system state for testing purposes."""
