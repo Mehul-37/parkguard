@@ -5,6 +5,23 @@ import API_BASE_URL from '../config';
 const AnalyticsDashboard = ({ selectedSite }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
+    const handleExport = () => {
+        if (!startDate || !endDate) return;
+
+        // Convert to Unix timestamps
+        const startTs = Math.floor(new Date(startDate).getTime() / 1000);
+        const endTs = Math.floor(new Date(endDate).setHours(23, 59, 59) / 1000); // End of day
+
+        let url = `${API_BASE_URL}/export-transactions?start_date=${startTs}&end_date=${endTs}`;
+        if (selectedSite) url += `&site_id=${selectedSite.id}`;
+
+        window.open(url, '_blank');
+        setShowExportModal(false);
+    };
 
     const MOCK_DATA = {
         daily_revenue: "₹24,500",
@@ -24,6 +41,18 @@ const AnalyticsDashboard = ({ selectedSite }) => {
         ],
         violation_distribution: [
             { "name": "Ghost Booking", "value": 3 }, { "name": "Unauthorized", "value": 4 }, { "name": "Overtime", "value": 1 }
+        ],
+        ai_recommendations: [
+            {
+                "type": "revenue",
+                "title": "Increase Peak Pricing",
+                "message": "Occupancy consistently exceeds 85% between 17:00 and 19:00. Implementing a dynamic surge fee of +₹10/hr could optimize turnover and increase revenue by ~15%."
+            },
+            {
+                "type": "security",
+                "title": "Site 1 Security Patrol",
+                "message": "Recurring 'Ghost Bookings' detected at Slot X7. Recommend physical audit of sensor calibration or deployment of a specific patrol at 12:00 PM."
+            }
         ]
     };
 
@@ -64,9 +93,20 @@ const AnalyticsDashboard = ({ selectedSite }) => {
 
     return (
         <div className="space-y-8 animate-fade-in pb-12">
-            <header className="mb-10">
-                <h2 className="text-4xl font-extrabold text-white mb-3 tracking-tight">Executive Reports</h2>
-                <p className="text-lg text-slate-400">Smart City Performance Metrics & Predictive Insights</p>
+            <header className="mb-10 flex justify-between items-end">
+                <div>
+                    <h2 className="text-4xl font-extrabold text-white mb-3 tracking-tight">Executive Reports</h2>
+                    <p className="text-lg text-slate-400">Smart City Performance Metrics & Predictive Insights</p>
+                </div>
+                <button
+                    onClick={() => setShowExportModal(true)}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                    Export CSV
+                </button>
             </header>
 
             {/* Top Row: KPIs */}
@@ -185,32 +225,75 @@ const AnalyticsDashboard = ({ selectedSite }) => {
                 <div className="glass-card p-8 md:col-span-2">
                     <h3 className="text-xl font-bold text-white mb-6">AI Recommendations</h3>
                     <div className="space-y-6">
-                        <div className="flex items-start gap-5">
-                            <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                        {(data?.ai_recommendations || []).map((reco, i) => (
+                            <div key={i} className="flex items-start gap-5">
+                                <div className={`p-3 rounded-xl ${reco.type === 'revenue' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-purple-500/10 text-purple-400'}`}>
+                                    {reco.type === 'revenue' ? (
+                                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                                    ) : (
+                                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                    )}
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-bold text-slate-200">{reco.title}</h4>
+                                    <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+                                        {reco.message}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="text-lg font-bold text-slate-200">Increase Peak Pricing</h4>
-                                <p className="text-sm text-slate-400 mt-2 leading-relaxed">
-                                    Occupancy consistently exceeds 85% between 17:00 and 19:00. Implementing a dynamic surge fee of +₹10/hr could optimize turnover and increase revenue by ~15%.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-5">
-                            <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                            </div>
-                            <div>
-                                <h4 className="text-lg font-bold text-slate-200">Site 1 Security Patrol</h4>
-                                <p className="text-sm text-slate-400 mt-2 leading-relaxed">
-                                    Recurring 'Ghost Bookings' detected at Slot X7. Recommend physical audit of sensor calibration or deployment of a specific patrol at 12:00 PM.
-                                </p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Export Modal */}
+            {
+                showExportModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 w-full max-w-md shadow-2xl">
+                            <h3 className="text-xl font-bold text-white mb-4">Export Transaction Data</h3>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">Start Date</label>
+                                    <input
+                                        type="date"
+                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-emerald-500"
+                                        value={startDate}
+                                        onChange={e => setStartDate(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-400 mb-1">End Date</label>
+                                    <input
+                                        type="date"
+                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-emerald-500"
+                                        value={endDate}
+                                        onChange={e => setEndDate(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 mt-8">
+                                <button
+                                    onClick={() => setShowExportModal(false)}
+                                    className="px-4 py-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleExport}
+                                    disabled={!startDate || !endDate}
+                                    className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                                >
+                                    Download CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

@@ -179,7 +179,7 @@ export default function DriverPortal({ selectedSite }) {
                             </div>
                             <div className="bg-slate-800/50 p-3 rounded-lg border border-white/5">
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Assigned Slot</p>
-                                <p className="text-xl font-bold text-accent-400">{ticket.assigned_slot}</p>
+                                <p className={`text-xl font-bold ${ticket.assigned_slot === 'OVERFLOW' ? 'text-red-500 animate-pulse' : 'text-accent-400'}`}>{ticket.assigned_slot}</p>
                             </div>
                         </div>
 

@@ -81,8 +81,22 @@ export default function AdminDashboard({ selectedSite }) {
     const activeAnomalies = liveAlerts.length;
 
     // Combine db alerts and live alerts for display
-    // We prioritize live alerts at the top, then historical
-    const displayAlerts = [...liveAlerts, ...stats.recent_alerts].slice(0, 10);
+    // SORTING PRIORITY:
+    // 1. Severity: HIGH (2) > MEDIUM (1) > LOW (0)
+    // 2. Timestamp: Newest First
+    const allAlerts = [...stats.recent_alerts, ...liveAlerts];
+
+    const severityScore = { 'HIGH': 2, 'MEDIUM': 1, 'LOW': 0, undefined: 0 };
+
+    allAlerts.sort((a, b) => {
+        const scoreA = severityScore[a.severity] || 0;
+        const scoreB = severityScore[b.severity] || 0;
+
+        if (scoreA !== scoreB) return scoreB - scoreA; // High score first
+        return b.timestamp - a.timestamp; // Newest first
+    });
+
+    const displayAlerts = allAlerts.slice(0, 50);
 
     // Generate Mock Slots for Realistic Layout
     const getDisplaySlots = () => {
@@ -292,12 +306,12 @@ export default function AdminDashboard({ selectedSite }) {
                     {/* Map Container */}
                     <div className="absolute inset-0 bg-slate-900 flex items-center justify-center overflow-hidden p-4">
                         {/* Wrapper to constrain overlay to image dimensions perfectly */}
-                        <div className="relative inline-block h-full max-w-full shadow-2xl">
+                        <div className="relative inline-flex max-w-full max-h-full shadow-2xl">
                             {/* Background Image */}
                             <img
                                 src={selectedSite.image_url || "/parking-layout.png"}
                                 alt="Site Layout"
-                                className="max-h-full max-w-full w-auto h-auto rounded opacity-50 block mx-auto"
+                                className="block w-auto h-auto max-w-full max-h-full rounded"
                             />
 
                             {/* Slots Overlay */}
@@ -384,8 +398,8 @@ export default function AdminDashboard({ selectedSite }) {
                                     <td className="px-4 py-3 text-white font-bold">{tx.plate_number}</td>
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-bold ${tx.type === 'ENTRY'
-                                                ? 'bg-emerald-500/20 text-emerald-400'
-                                                : 'bg-blue-500/20 text-blue-400'
+                                            ? 'bg-emerald-500/20 text-emerald-400'
+                                            : 'bg-blue-500/20 text-blue-400'
                                             }`}>
                                             {tx.type}
                                         </span>

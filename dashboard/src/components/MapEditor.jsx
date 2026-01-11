@@ -121,6 +121,11 @@ const MapEditor = ({ selectedSite }) => {
         if (!selectedSite) return;
         const finalUrl = overrideUrl !== null ? overrideUrl : imageUrlInput;
 
+        if (!finalUrl || finalUrl.trim() === '') {
+            alert('Please provide an image URL or upload a file first.');
+            return;
+        }
+
         try {
             const res = await fetch(`${API_BASE_URL}/sites/${selectedSite.id}`, {
                 method: 'PUT',
@@ -129,19 +134,41 @@ const MapEditor = ({ selectedSite }) => {
             });
             if (res.ok) {
                 if (overrideUrl) setImageUrlInput(overrideUrl);
-                alert("Map image updated! Please refresh.");
+                alert("Map image updated successfully! Refreshing...");
                 setIsConfiguringMap(false);
+                // Trigger a refresh to reload the image
+                window.location.reload();
+            } else {
+                const errorData = await res.json().catch(() => ({}));
+                alert(`Failed to update image: ${errorData.detail || res.statusText}`);
             }
         } catch (err) {
-            console.error(err);
+            console.error('Image update error:', err);
+            alert(`Error updating image: ${err.message}`);
         }
     };
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file.');
+            return;
+        }
+
+        // Store original image without compression for maximum quality
         const reader = new FileReader();
-        reader.onloadend = () => setImageUrlInput(reader.result);
+        reader.onload = (event) => {
+            const base64String = event.target.result;
+            setImageUrlInput(base64String);
+            console.log('Image loaded. Size:', Math.round(base64String.length / 1024), 'KB');
+            alert('Image loaded! Click "Save" to apply it.');
+        };
+        reader.onerror = () => {
+            alert('Failed to read file. Please try again.');
+        };
         reader.readAsDataURL(file);
     };
 
@@ -425,8 +452,13 @@ const MapEditor = ({ selectedSite }) => {
                         ref={imgRef}
                         src={selectedSite.image_url || "/parking-layout.png"}
                         alt="Parking Layout"
-                        className="h-full w-auto max-w-full object-contain pointer-events-none select-none rounded opacity-80"
+                        className="h-full w-auto max-w-full object-contain pointer-events-none select-none rounded"
+                        style={{ imageRendering: 'crisp-edges' }}
                         draggable={false}
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/parking-layout.png";
+                        }}
                     />
 
                     {/* RENDER LANES AND NODES */}

@@ -5,6 +5,9 @@ from typing import Optional, List
 import hashlib
 import time
 import random
+import csv
+import io
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
@@ -90,6 +93,11 @@ class SiteUpdate(BaseModel):
     entry_x: Optional[str] = None
     entry_y: Optional[str] = None
 
+class SiteCreate(BaseModel):
+    name: str
+    image_url: str = "/parking-layout.png"
+
+
 class CarEntry(BaseModel):
     plate_number: Optional[str] = None
     fastag_id: Optional[str] = None
@@ -134,6 +142,24 @@ def read_root(db: Session = Depends(get_db)):
 def get_sites(db: Session = Depends(get_db)):
     return db.query(models.Site).all()
 
+@app.post("/sites")
+def create_site(site_create: SiteCreate, db: Session = Depends(get_db)):
+    # Generate a simple ID based on name or random
+    site_id = site_create.name.lower().replace(" ", "_").replace("-", "_") + "_" + str(random.randint(1000, 9999))
+    
+    new_site = models.Site(
+        id=site_id,
+        name=site_create.name,
+        image_url=site_create.image_url,
+        entry_x="0",
+        entry_y="0"
+    )
+    db.add(new_site)
+    db.commit()
+    db.refresh(new_site)
+    return new_site
+
+
 @app.put("/sites/{site_id}")
 def update_site(site_id: str, site_update: SiteUpdate, db: Session = Depends(get_db)):
     site = db.query(models.Site).filter(models.Site.id == site_id).first()
@@ -174,8 +200,6 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
         models.Slot.occupied == False
     ).all()
     
-    if not site_slots:
-         raise HTTPException(status_code=409, detail="Parking Full - No slots available")
 
     # --- HYBRID ENTRY RESOLUTION ---
     plate_number = entry.plate_number
@@ -190,17 +214,37 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
             # Fallback or Error? Let's error if tag is invalid provided
             raise HTTPException(status_code=400, detail="Invalid FASTag ID")
     
-    if not plate_number:
-         raise HTTPException(status_code=400, detail="Plate Number or valid FASTag required")
+    assigned_slot_id = ""
+    directions = ""
 
-    # Simple heuristic
-    best_slot = min(site_slots, key=lambda s: calculate_manhattan_distance(
-        gate_x, gate_y, s.x, s.y
-    ))
-    
-    # Update slot status
-    best_slot.occupied = True
-    db.commit() # Save slot status
+    if not site_slots:
+         # --- OVERCAPACITY HANDLING ---
+         assigned_slot_id = "OVERFLOW"
+         directions = "Proceed to Overflow Area"
+         
+         # Trigger Security Alert
+         alert = models.Alert(
+            type="OVERCAPACITY",
+            message=f"Overcapacity Entry: Vehicle {plate_number} allowed entry to {entry.site_id} despite 0 slots available.",
+            severity="HIGH",
+            site_id=entry.site_id,
+            timestamp=int(time.time())
+         )
+         db.add(alert)
+         db.commit()
+         
+    else:
+        # Simple heuristic
+        best_slot = min(site_slots, key=lambda s: calculate_manhattan_distance(
+            gate_x, gate_y, s.x, s.y
+        ))
+        
+        # Update slot status
+        best_slot.occupied = True
+        db.commit() # Save slot status
+        
+        assigned_slot_id = best_slot.slot_id
+        directions = f"Go to Grid ({best_slot.x}, {best_slot.y})"
 
     # --- CHAIN LOGIC ---
     timestamp = int(time.time())
@@ -210,7 +254,7 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
     prev_hash = last_tx.hash if last_tx else "0"
     
     # Create the raw data string for hashing
-    raw_data = f"{plate_number}{best_slot.slot_id}{timestamp}{prev_hash}{entry.site_id}{entry_method}"
+    raw_data = f"{plate_number}{assigned_slot_id}{timestamp}{prev_hash}{entry.site_id}{entry_method}"
     tx_hash = generate_hash(raw_data)
     
     ticket_id = f"TKT-{timestamp}-{random.randint(1000,9999)}"
@@ -219,7 +263,7 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
         timestamp=timestamp,
         ticket_id=ticket_id,
         plate_number=plate_number,
-        assigned_slot=best_slot.slot_id,
+        assigned_slot=assigned_slot_id,
         site_id=entry.site_id,
         prev_hash=prev_hash,
         hash=tx_hash,
@@ -233,11 +277,11 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
 
     return {
         "ticket_id": ticket_id,
-        "assigned_slot": best_slot.slot_id,
+        "assigned_slot": assigned_slot_id,
         "site_id": entry.site_id,
         "entry_method": entry_method,
         "plate_number": plate_number, # Return resolved plate
-        "directions": f"Go to Grid ({best_slot.x}, {best_slot.y})",
+        "directions": directions,
         "blockchain_hash": tx_hash,
         "message": f"{entry_method} Entry logged. Proceed to slot."
     }
@@ -505,6 +549,105 @@ def simulate_sensor(toggle: SensorToggle, db: Session = Depends(get_db)):
         "alert": alert_data,
         "message": "Sensor state updated"
     }
+
+@app.get("/analytics-overview")
+def get_analytics_overview(db: Session = Depends(get_db)):
+    # Placeholder for actual analytics logic
+    # In a real app, this would query the DB, perform calculations, etc.
+    
+    # Example data for trends (replace with actual data from DB)
+    revenue_trend = [
+        {"date": "2023-10-01", "value": 15000},
+        {"date": "2023-10-02", "value": 16000},
+        {"date": "2023-10-03", "value": 17500},
+        {"date": "2023-10-04", "value": 18000},
+        {"date": "2023-10-05", "value": 19500},
+        {"date": "2023-10-06", "value": 21000},
+        {"date": "2023-10-07", "value": 24500},
+    ]
+    
+    occupancy_trend = [
+        {"date": "2023-10-01", "value": 65},
+        {"date": "2023-10-02", "value": 68},
+        {"date": "2023-10-03", "value": 70},
+        {"date": "2023-10-04", "value": 72},
+        {"date": "2023-10-05", "value": 75},
+        {"date": "2023-10-06", "value": 77},
+        {"date": "2023-10-07", "value": 78},
+    ]
+
+    return {
+        "daily_revenue": "₹24,500",
+        "avg_occupancy": 78,
+        "violation_count": 8,
+        "revenue_trend": revenue_trend,
+        "occupancy_trend": occupancy_trend,
+        "violation_distribution": [
+            {"name": "Ghost Booking", "value": 3},
+            {"name": "Unauthorized", "value": 4},
+            {"name": "Overtime", "value": 1},
+        ],
+        "ai_recommendations": [
+            {
+                "type": "revenue",
+                "title": "Increase Peak Pricing",
+                "message": "Occupancy consistently exceeds 85% between 17:00 and 19:00. Implementing a dynamic surge fee of +₹10/hr could optimize turnover and increase revenue by ~15%."
+            },
+            {
+                "type": "security",
+                "title": "Site 1 Security Patrol",
+                "message": "Recurring 'Ghost Bookings' detected at Slot X7. Recommend physical audit of sensor calibration or deployment of a specific patrol at 12:00 PM."
+            }
+        ]
+    }
+
+@app.get("/export-transactions")
+def export_transactions(
+    start_date: int = Query(..., description="Start timestamp (Unix)"),
+    end_date: int = Query(..., description="End timestamp (Unix)"),
+    site_id: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    # 1. Query Data
+    query = db.query(models.Transaction).filter(
+        models.Transaction.timestamp >= start_date,
+        models.Transaction.timestamp <= end_date
+    )
+    if site_id:
+        query = query.filter(models.Transaction.site_id == site_id)
+    
+    transactions = query.order_by(desc(models.Transaction.timestamp)).all()
+    
+    # 2. Create CSV in Memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Headers
+    writer.writerow(["Ticket ID", "Site ID", "Type", "Plate/Tag", "Entry Method", "Slot", "Time", "Fee", "Hash"])
+    
+    # Data
+    for tx in transactions:
+        writer.writerow([
+            tx.ticket_id,
+            tx.site_id,
+            tx.type,
+            tx.plate_number,
+            tx.entry_method,
+            tx.assigned_slot,
+            time.ctime(tx.timestamp),
+            tx.fee if tx.fee else "-",
+            tx.hash
+        ])
+        
+    output.seek(0)
+    
+    # 3. Return Stream
+    filename = f"parking_export_{start_date}_{end_date}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 @app.get("/verify-chain")
 def verify_blockchain(db: Session = Depends(get_db)):

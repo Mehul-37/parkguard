@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -7,7 +7,7 @@ class Site(Base):
 
     id = Column(String, primary_key=True, index=True)
     name = Column(String)
-    image_url = Column(String)
+    image_url = Column(Text)
     entry_x = Column(String, default="0")
     entry_y = Column(String, default="0")
 

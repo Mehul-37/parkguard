@@ -5,6 +5,21 @@ export default function AuditorView() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
+    const handleExport = () => {
+        if (!startDate || !endDate) return;
+
+        // Convert to Unix timestamps
+        const startTs = Math.floor(new Date(startDate).getTime() / 1000);
+        const endTs = Math.floor(new Date(endDate).setHours(23, 59, 59) / 1000);
+
+        let url = `${API_BASE_URL}/export-transactions?start_date=${startTs}&end_date=${endTs}`;
+        window.open(url, '_blank');
+        setShowExportModal(false);
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -65,6 +80,13 @@ export default function AuditorView() {
                             {error}
                         </span>
                     )}
+                    <button
+                        onClick={() => setShowExportModal(true)}
+                        className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 rounded-lg transition-all text-xs font-bold uppercase tracking-wider border border-emerald-500/20 flex items-center gap-1"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        Export Ledger
+                    </button>
                     <button
                         onClick={handleReset}
                         className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-all text-xs font-bold uppercase tracking-wider border border-red-500/20"
@@ -195,12 +217,14 @@ export default function AuditorView() {
                                             <div className="flex items-center gap-2">
                                                 <span className={`inline-flex items-center justify-center h-8 px-3 rounded-lg border font-bold text-xs ${isExit
                                                     ? 'bg-slate-800 border-white/5 text-slate-500'
-                                                    : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                                                    : session.entry?.assigned_slot === 'OVERFLOW'
+                                                        ? 'bg-red-500/20 border-red-500/30 text-red-500 animate-pulse'
+                                                        : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
                                                     }`}>
                                                     {session.entry ? session.entry.assigned_slot : '?'}
                                                 </span>
                                                 {isExit && (
-                                                    <span className="inline-flex items-center justify-center h-8 px-3 rounded-lg border border-red-500/30 bg-red-500/20 text-red-400 text-xs font-bold">
+                                                    <span className="inline-flex items-center justify-center h-8 px-3 rounded-lg border border-red-500/30 bg-red-500/20 text-red-500 text-xs font-bold">
                                                         EXITED
                                                     </span>
                                                 )}
@@ -249,6 +273,53 @@ export default function AuditorView() {
                     </tbody>
                 </table>
             </div>
-        </div>
+
+            {/* Export Modal */}
+            {showExportModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 w-full max-w-md shadow-2xl">
+                        <h3 className="text-xl font-bold text-white mb-4">Export Ledger</h3>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-1">Start Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-emerald-500"
+                                    value={startDate}
+                                    onChange={e => setStartDate(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-1">End Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-emerald-500"
+                                    value={endDate}
+                                    onChange={e => setEndDate(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-8">
+                            <button
+                                onClick={() => setShowExportModal(false)}
+                                className="px-4 py-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleExport}
+                                disabled={!startDate || !endDate}
+                                className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                            >
+                                Download CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )
+            }
+        </div >
     );
 }

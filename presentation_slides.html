@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkGuard Presentation Slides</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .slide {
+            width: 297mm;
+            /* A4 Landscape width */
+            height: 210mm;
+            /* A4 Landscape height */
+            margin: 20px auto;
+            background: white;
+            padding: 60px;
+            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            page-break-after: always;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+
+            .slide {
+                margin: 0;
+                box-shadow: none;
+                width: 100vw;
+                height: 100vh;
+                border: none;
+            }
+        }
+
+        h1 {
+            color: #1e3a8a;
+            /* Dark Blue */
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            color: #1e3a8a;
+            font-size: 2.8rem;
+            margin-bottom: 30px;
+            border-bottom: 4px solid #3b82f6;
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #2563eb;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            margin-top: 25px;
+        }
+
+        p,
+        li {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        li::before {
+            content: "➤";
+            color: #3b82f6;
+            position: absolute;
+            left: 0;
+            font-size: 1.2rem;
+        }
+
+        .highlight-box {
+            background-color: #eff6ff;
+            border-left: 6px solid #3b82f6;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            color: #6b7280;
+            font-weight: 300;
+            margin-top: 0;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            right: 60px;
+            font-size: 1rem;
+            color: #9ca3af;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .card {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Slide Specific Styles */
+        .title-slide {
+            text-align: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: white;
+        }
+
+        .title-slide h1,
+        .title-slide h2,
+        .title-slide p,
+        .title-slide .tagline {
+            color: white;
+        }
+
+        .title-slide h1 {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .title-slide .subtitle {
+            font-size: 2rem;
+            opacity: 0.9;
+            margin-bottom: 50px;
+            font-weight: 300;
+        }
+
+        .team-list {
+            font-size: 1.2rem;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Slide 1: Title -->
+    <div class="slide title-slide">
+        <h1>HACK4DELHI</h1>
+        <p class="subtitle">Pitch Directly to the Government. Build for the Nation.</p>
+
+        <div style="margin: 40px 0;">
+            <h2 style="border: none; font-size: 4rem; margin: 0;">PARKGUARD</h2>
+            <p class="tagline" style="font-size: 1.8rem; margin-top: 10px; color: #93c5fd;">A Tamper-Proof Digital Twin
+                for Municipal Revenue Assurance</p>
+        </div>
+
+        <div class="team-list">
+            <span>Team IGNIS: Mehul</span> |
+            <span>Aavya</span> |
+            <span>Harsh</span> |
+            <span>Rachit</span> |
+            <span>Ayush</span>
+        </div>
+    </div>
+
+    <!-- Slide 2: Problem Statement -->
+    <div class="slide">
+        <h2>PROBLEM STATEMENT</h2>
+        <p class="tagline">The "Black Hole" of Municipal Parking Revenue</p>
+
+        <div class="grid-2">
+            <div>
+                <h3>🔴 Revenue "Ghosting"</h3>
+                <p>Cash is collected by contractors on the ground but never recorded in the central system, leading to
+                    massive financial leakage.</p>
+
+                <h3>🔴 Opaque Operations</h3>
+                <p>Municipal corporations have zero real-time visibility into ground-level occupancy, relying on
+                    outdated manual reports.</p>
+            </div>
+            <div>
+                <h3>🔴 Audit Failure</h3>
+                <p>Manual paper-based logbooks are easily forged, lost, or manipulated, making post-facto auditing
+                    legally impossible.</p>
+
+                <h3>🔴 Space Inefficiency</h3>
+                <p>Without live data, enforcement officers are reactive, not proactive, leading to congestion and poor
+                    asset utilization.</p>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <strong>Key Insight:</strong> The problem isn't just "parking"—it's the lack of a verifiable link between
+            <em>physical usage</em> and <em>digital payment</em>.
+        </div>
+        <div class="footer">ParkGuard | Slide 2</div>
+    </div>
+
+    <!-- Slide 3: Solution -->
+    <div class="slide">
+        <h2>THE PARKGUARD ECOSYSTEM</h2>
+        <p class="tagline">Bridging the Physical and Digital Worlds</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>1. Live "Digital Twin"</h3>
+                <p>A dynamic, visual replica of the parking lot that reflects real-time ground reality. Administrators
+                    can see occupancy slot-by-slot instantly.</p>
+            </div>
+            <div class="card">
+                <h3>2. I.o.T. Integration</h3>
+                <p>Hardware-agnostic sensor integration detects physical vehicle presence (Ultrasonic/Camera)
+                    independent of the payment system.</p>
+            </div>
+            <div class="card">
+                <h3>3. Cryptographic Ledger</h3>
+                <p>Every booking, entry, and exit is hashed on a blockchain implementation, creating an immutable legal
+                    record that cannot be edited.</p>
+            </div>
+            <div class="card">
+                <h3>4. Automated Audit</h3>
+                <p>The system automatically flags discrepancies between <strong>Physical Presence</strong> (Sensor) and
+                    <strong>Digital Record</strong> (Payment).</p>
+            </div>
+        </div>
+        <div class="footer">ParkGuard | Slide 3</div>
+    </div>
+
+    <!-- Slide 4: Architecture -->
+    <div class="slide">
+        <h2>SYSTEM ARCHITECTURE</h2>
+        <p class="tagline">The Trust Loop: ensuring data integrity at every step.</p>
+
+        <div style="display: flex; gap: 20px; align-items: stretch; height: 50%;">
+            <div class="card" style="flex: 1; border-top: 5px solid #ef4444;">
+                <h3>Step 1: Physical Layer (Input)</h3>
+                <ul>
+                    <li>IoT Sensors detect car.</li>
+                    <li>Cameras read License Plate.</li>
+                    <li>Driver App generates Request.</li>
+                </ul>
+            </div>
+            <div style="display:flex; align-items:center; font-size: 2rem; color: #cbd5e1;">➜</div>
+            <div class="card" style="flex: 1; border-top: 5px solid #3b82f6;">
+                <h3>Step 2: Verification Layer (Process)</h3>
+                <ul>
+                    <li><strong>Backend (FastAPI):</strong> Validates request.</li>
+                    <li><strong>Logic Check:</strong> Is Slot Empty? Is Payment Valid?</li>
+                    <li><strong>Space Allocation:</strong> Assigns optimal slot.</li>
+                </ul>
+            </div>
+            <div style="display:flex; align-items:center; font-size: 2rem; color: #cbd5e1;">➜</div>
+            <div class="card" style="flex: 1; border-top: 5px solid #22c55e;">
+                <h3>Step 3: Audit Layer (Storage)</h3>
+                <ul>
+                    <li><strong>Blockchain Ledger:</strong> Hashes the transaction event.</li>
+                    <li><strong>Auditor Dashboard:</strong> Verifies the chain hash.</li>
+                    <li><strong>Status:</strong> Valid/Tampered Alert.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="highlight-box" style="text-align: center; margin-top: 40px;">
+            Decentralized verification ensures that <strong>no single actor</strong>—contractor, admin, or user—can
+            alter the history.
+        </div>
+        <div class="footer">ParkGuard | Slide 4</div>
+    </div>
+
+    <!-- Slide 5: Key Features (The "Best" Features) -->
+    <div class="slide">
+        <h2>KEY FEATURES & INNOVATION</h2>
+        <p class="tagline">Why ParkGuard is a Government-Grade Solution</p>
+
+        <div class="grid-2">
+            <div>
+                <h3>✅ Automated Anomaly Detection</h3>
+                <p>The system autonomously compares sensor data against payment records. If a car is physically parked
+                    but acts "Digital Ghost" (unpaid), the slot turns <strong>RED</strong> and alerts authorities.</p>
+            </div>
+            <div>
+                <h3>✅ Immutable Audit Trails</h3>
+                <p>Utilizes <strong>SHA-256 Merkle Chaining</strong>. Records cannot be altered, deleted, or backdated.
+                    One-click "Chain Verification" proves data integrity for legal admissibility.</p>
+            </div>
+            <div>
+                <h3>✅ Dynamic Infrastructure</h3>
+                <p><strong>Map Editor & Digital Twin:</strong> Fully customizable mapping tools allow administrators to
+                    update parking layouts, price zones, and sensor positions on the fly.</p>
+            </div>
+            <div>
+                <h3>✅ Smart Yield Optimization</h3>
+                <p><strong>A* Pathfinding Algorithms</strong> guide drivers to the nearest open slot, maximizing
+                    turnover, reducing fuel emissions, and increasing revenue per square foot.</p>
+            </div>
+        </div>
+        <div class="footer">ParkGuard | Slide 5</div>
+    </div>
+
+    <!-- Slide 6: Technology Stack -->
+    <div class="slide">
+        <h2>TECHNOLOGY STACK</h2>
+        <p class="tagline">Built for Scale, Speed, and Security</p>
+
+        <ul>
+            <li>
+                <strong>Frontend (The Interface):</strong> <br>
+                ReactJS + Vite + Tailwind CSS <br>
+                <span style="font-size: 0.9em; color: #666;">Delivers a responsive, mobile-first dashboard for officers
+                    in the field.</span>
+            </li>
+            <li>
+                <strong>Backend (The Brain):</strong> <br>
+                FastAPI (Python) <br>
+                <span style="font-size: 0.9em; color: #666;">High-performance asynchronous handling for real-time sensor
+                    data streams.</span>
+            </li>
+            <li>
+                <strong>Security (The Vault):</strong> <br>
+                SHA-256 Hashing Integration <br>
+                <span style="font-size: 0.9em; color: #666;">Standard cryptographic implementation for
+                    tamper-proofing.</span>
+            </li>
+            <li>
+                <strong>Data & Reporting (The Output):</strong> <br>
+                SQLite + CSV Export Engine <br>
+                <span style="font-size: 0.9em; color: #666;">Generates standard, exportable audit trails ready for
+                    bureaucratic review.</span>
+            </li>
+        </ul>
+        <div class="footer">ParkGuard | Slide 6</div>
+    </div>
+
+    <!-- Slide 7: References -->
+    <div class="slide" style="text-align: center;">
+        <h2>REFERENCES & RESOURCES</h2>
+
+        <div style="margin-top: 40px;">
+
+            <div class="card" style="display: inline-block; width: 45%; margin: 10px; text-align: left;">
+                <h3>🌍 Live Prototype</h3>
+                <p>Experience the Digital Twin live:</p>
+                <a href="https://parkguard-one.vercel.app"
+                    style="font-size: 1.2rem; color: #2563eb;">parkguard-one.vercel.app</a>
+            </div>
+
+            <div class="card" style="display: inline-block; width: 45%; margin: 10px; text-align: left;">
+                <h3>💻 GitHub Repository</h3>
+                <p>Inspect the Source Code:</p>
+                <a href="#" style="font-size: 1.2rem; color: #2563eb;">github.com/Mehul-37/parkguard</a>
+            </div>
+
+            <br><br>
+
+            <div class="highlight-box" style="display: inline-block; text-align: left; max-width: 600px;">
+                <strong>Try the "Auditor View":</strong> <br>
+                Visit the live link and advocate for the "Auditor" tab to see real-time Blockchain Verification in
+                action.
+            </div>
+
+        </div>
+
+        <h3 style="margin-top: 60px;">THANK YOU</h3>
+        <p>HACK4DELHI | Team IGNIS</p>
+        <div class="footer">ParkGuard | Slide 7</div>
+    </div>
+
+</body>
+
+</html>
