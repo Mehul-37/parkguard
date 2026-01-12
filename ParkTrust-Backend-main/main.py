@@ -354,6 +354,9 @@ def vehicle_exits(exit_req: CarExit, db: Session = Depends(get_db)):
         slot.occupied_timestamp = 0
         slot.sensor_status = "EMPTY"
         db.commit()
+    elif slot_id == "OVERFLOW":
+        # Overflow slots are virtual, no update needed
+        pass
     
     # 3. Generate Receipt Hash
     receipt_data = f"{exit_req.ticket_id}{total_fee}{current_time}PAID"
@@ -482,6 +485,7 @@ def update_slots(new_slots: List[dict], site_id: str = Query(..., description="I
             x=s["x"],
             y=s["y"],
             occupied=occupied,
+            occupied_timestamp=s.get("occupied_timestamp", 0),
             sensor_status=sensor_status
         )
         db.add(slot)
@@ -522,13 +526,19 @@ def simulate_sensor(toggle: SensorToggle, db: Session = Depends(get_db)):
         
     # Case B: System says Occupied (Paid), but Sensor says Empty
     elif slot.occupied and slot.sensor_status == "EMPTY":
-        alert_data = {
-            "type": "GHOST_BOOKING",
-            "message": f"Security Alert: Vehicle missing from paid slot {slot.slot_id} at {slot.site_id}",
-            "severity": "MEDIUM",
-            "site_id": slot.site_id,
-            "timestamp": int(time.time())
-        }
+        # Check for 30s delay
+        time_since_occupied = int(time.time()) - (slot.occupied_timestamp or 0)
+        
+        if slot.occupied_timestamp > 0 and time_since_occupied > 30:
+            alert_data = {
+                "type": "GHOST_BOOKING",
+                "message": f"Security Alert: Vehicle missing from paid slot {slot.slot_id} at {slot.site_id}",
+                "severity": "MEDIUM",
+                "site_id": slot.site_id,
+                "timestamp": int(time.time())
+            }
+        else:
+            alert_data = None # Suppress alert if within grace period
     else:
         alert_data = None
     

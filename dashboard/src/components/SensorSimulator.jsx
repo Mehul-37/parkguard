@@ -59,7 +59,12 @@ const SensorSimulator = ({ selectedSite }) => {
             return { id: slot.id, type: 'UNAUTHORIZED_PARKING', message: `Unauthorized vehicle in ${slot.id}`, severity: 'high' };
         }
         if (slot.occupied && slot.sensor_status === 'EMPTY') {
-            return { id: slot.id, type: 'GHOST_BOOKING', message: `Vehicle missing from paid slot ${slot.id}`, severity: 'medium' };
+            const occupiedTs = slot.occupied_timestamp || 0;
+            const timeSinceOccupied = occupiedTs > 0 ? (Date.now() / 1000) - occupiedTs : 0;
+
+            if (occupiedTs > 0 && timeSinceOccupied > 30) {
+                return { id: slot.id, type: 'GHOST_BOOKING', message: `Vehicle missing from paid slot ${slot.id}`, severity: 'medium' };
+            }
         }
         return null;
     }).filter(Boolean);
