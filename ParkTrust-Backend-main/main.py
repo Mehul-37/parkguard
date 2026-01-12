@@ -737,6 +737,7 @@ def reset_system(db: Session = Depends(get_db)):
     slots = db.query(models.Slot).all()
     for slot in slots:
         slot.occupied = False
+        slot.occupied_timestamp = 0
         slot.sensor_status = "EMPTY"
     
     db.commit()

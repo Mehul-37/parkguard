@@ -61,7 +61,7 @@ export default function AdminDashboard({ selectedSite }) {
         if (s.occupied && s.sensor_status === 'EMPTY' && timeSinceOccupied > 30) {
             return {
                 type: 'GHOST_BOOKING',
-                message: `Live Mismatch: Vehicle missing from paid slot ${s.id}`,
+                message: `Live Mismatch: Vehicle missing from paid slot ${s.id} (${Math.round(timeSinceOccupied)}s)`,
                 severity: 'MEDIUM',
                 timestamp: Date.now() / 1000,
                 site_id: s.site_id,
