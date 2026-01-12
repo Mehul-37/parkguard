@@ -55,10 +55,11 @@ export default function AdminDashboard({ selectedSite }) {
 
     // Calculate Active Alerts from Live Data
     const liveAlerts = slots.map(s => {
-        const timeSinceOccupied = (Date.now() / 1000) - (s.occupied_timestamp || 0);
+        const occupiedTs = s.occupied_timestamp || 0;
+        const timeSinceOccupied = occupiedTs > 0 ? (Date.now() / 1000) - occupiedTs : 0;
 
-        // GHOST BOOKING: Only alert if occupied but sensor empty for > 30 seconds
-        if (s.occupied && s.sensor_status === 'EMPTY' && timeSinceOccupied > 30) {
+        // GHOST BOOKING: Only alert if occupied, sensor empty, AND more than 30 seconds since entry
+        if (s.occupied && s.sensor_status === 'EMPTY' && occupiedTs > 0 && timeSinceOccupied > 30) {
             return {
                 type: 'GHOST_BOOKING',
                 message: `Live Mismatch: Vehicle missing from paid slot ${s.id} (${Math.round(timeSinceOccupied)}s)`,
