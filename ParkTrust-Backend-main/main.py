@@ -241,6 +241,7 @@ def vehicle_enters(entry: CarEntry, db: Session = Depends(get_db)):
         
         # Update slot status
         best_slot.occupied = True
+        best_slot.occupied_timestamp = int(time.time())
         db.commit() # Save slot status
         
         assigned_slot_id = best_slot.slot_id
@@ -350,6 +351,7 @@ def vehicle_exits(exit_req: CarExit, db: Session = Depends(get_db)):
 
     if slot:
         slot.occupied = False
+        slot.occupied_timestamp = 0
         slot.sensor_status = "EMPTY"
         db.commit()
     
@@ -457,6 +459,7 @@ def get_slots(site_id: Optional[str] = None, db: Session = Depends(get_db)):
             "x": s.x,
             "y": s.y,
             "occupied": s.occupied,
+            "occupied_timestamp": s.occupied_timestamp,
             "sensor_status": s.sensor_status
         })
     return result

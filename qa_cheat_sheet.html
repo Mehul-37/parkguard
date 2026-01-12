@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkGuard - Q&A Strategy</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            color: #1e3a8a;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 4px solid #3b82f6;
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .category-title {
+            background-color: #1e3a8a;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .qa-card {
+            background: #fff;
+            border-left: 5px solid #cbd5e1;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .qa-card:hover {
+            border-left-color: #3b82f6;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 10px;
+        }
+
+        .answer {
+            font-size: 1.1rem;
+            color: #475569;
+        }
+
+        .highlight {
+            background-color: #dbeafe;
+            color: #1e40af;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .red-flag {
+            border-left-color: #ef4444;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+
+            .qa-card {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header-section">
+            <h1>JUDGES Q&A CHEAT SHEET</h1>
+            <p style="font-size: 1.2rem; color: #64748b;">Anticipated Questions & Winning Answers for Round 2</p>
+        </div>
+
+        <!-- TECHNICAL QUESTIONS -->
+        <div style="text-align: center;"><span class="category-title">🔧 Technical & Feasibility</span></div>
+
+        <div class="qa-card">
+            <div class="question">Q: What happens if the internet goes down?</div>
+            <div class="answer">
+                <strong>Winning Answer:</strong> "The system is built with an <span class="highlight">Offline-First
+                    Architecture</span>. The local gateway buffers sensor data and transactions locally. Once
+                connectivity is restored, it batch-syncs all hashes to the blockchain. Operations never stop."
+            </div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q: Isn't putting every transaction on Blockchain expensive/slow?</div>
+            <div class="answer">
+                <strong>Winning Answer:</strong> "We don't mine a block for every 20-rupee ticket. We use <span
+                    class="highlight">Merkle Tree Batching</span>. We aggregate 100+ transactions into a single hash
+                root and commit that to the chain spread out over time. This keeps costs negligible and speed instant."
+            </div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q: Sensors (Ultrasonic/IR) are unreliable outdoors. How do you handle that?</div>
+            <div class="answer">
+                <strong>Winning Answer:</strong> "Correct. That is why for street parking, we specify <span
+                    class="highlight">IP68-rated Road Stud Magnetometers</span> (LoRaWAN). They detect magnetic
+                disturbance of large metal objects (cars) and are immune to rain, dust, or light interference."
+            </div>
+        </div>
+
+
+        <!-- OPERATIONAL & ADOPTION -->
+        <div style="text-align: center;"><span class="category-title">🚀 Operational & Adoption</span></div>
+
+        <div class="qa-card red-flag">
+            <div class="question">Q: Contractors will disable the sensors or sabotage the system.</div>
+            <div class="answer">
+                <strong>Winning Answer:</strong> "That is a feature, not a bug. If a sensor node goes 'offline'
+                suddenly, the <span class="highlight">Audit Dashboard triggers a Red Alert</span> for that specific
+                sector. The municipality can instantly fine the contractor for 'Equipment Tampering' as per the SLA."
+            </div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q: Why not just use FastTag for everything?</div>
+            <div class="answer">
+                <strong>Winning Answer:</strong> "FastTag is great for *payment*, but it doesn't solve *occupancy
+                fraud*. A contractor can claim a lot is full when it's empty to surge prices, or claim it's empty when
+                it's full (illegal parking). ParkGuard provides the <span class="highlight">Physical Verification
+                    layer</span> that FastTag misses."
+            </div>
+        </div>
+
+
+        <!-- BUSINESS & ROI -->
+        <div style="text-align: center;"><span class="category-title">💰 Financial Viability</span></div>
+
+        <div class="qa-card">
+            <div class="question">Q: This hardware is expensive. Is it viable for government?</div>
+            <div class="answer">
+                <strong>Winning Answer:</strong> "The ROI is extremely fast. A single sensor costs ~₹2,400. Currently,
+                pure cash leakage is ~30% (₹60/day/slot). By stopping this leakage, the hardware <span
+                    class="highlight">pays for itself in just 40 days</span>. After that, it's pure profit for the
+                state."
+            </div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q: Who pays for the system?</div>
+            <div class="answer">
+                <strong>Winning Answer:</strong> "Ideally, a <span class="highlight">PPP Model (Public-Private
+                    Partnership)</span>. The Tech Partner (us) installs it. The revenue boost is shared. This removes
+                the upfront CaPex burden from the Municipality."
+            </div>
+        </div>
+
+        <!-- FUTURE -->
+        <div style="text-align: center;"><span class="category-title">🔮 Future Scope</span></div>
+
+        <div class="qa-card">
+            <div class="question">Q: How does this scale to the whole city?</div>
+            <div class="answer">
+                <strong>Winning Answer:</strong> "Since we use <span class="highlight">LoRaWAN</span>, we don't need
+                cabling. A single Gateway covers 2-3km radius. We can cover an entire district with just 5-6 gateways.
+                The backend on Cloud scales horizontally."
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

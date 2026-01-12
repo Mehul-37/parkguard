@@ -22,6 +22,7 @@ class Slot(Base):
     x = Column(String)  # Can be integer or percentage string (e.g., "45.2%")
     y = Column(String)  # Can be integer or percentage string (e.g., "30.5%")
     occupied = Column(Boolean, default=False)
+    occupied_timestamp = Column(Integer, default=0)
     sensor_status = Column(String, default="EMPTY")
 
 class Transaction(Base):
